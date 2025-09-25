@@ -11,7 +11,7 @@ const verificarUsuario = (usuario) => {
   });
 };
 
-console.log('\n--- Prueba de Promesas ---');
+console.log('\n--- Prueba de Promesas  ---');
 
 // Caso 1: Usuario 'admin' (éxito)
 verificarUsuario('admin')
