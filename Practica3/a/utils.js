@@ -1,9 +1,7 @@
 /**
  * Retorna la resta de dos números.
- * @param {number} a
- * @param {number} b
- * @returns {number} La resta de a y b.
+ * Usando 'const' con Arrow Function para la declaración.
  */
-export function restar(a, b) {
+export const restar = (a, b) => {
   return a - b;
-}
+};
