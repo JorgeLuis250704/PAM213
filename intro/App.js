@@ -1,43 +1,57 @@
-//import
+//zona 1 import: Zona de importaciones
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View,Button } from 'react-native';
+import React,{useState} from 'react';
 
-//main
+//zona 2 main: Zona de componentes
 export default function App() {
-  const [count, setCount] = useState(0);
+
+  const [contador,setContador]=useState(0);
 
   return (
     <View style={styles.container}>
-      <Text>Contador: {count}</Text>
-
-      <View style={styles.buttonContainer}>
-        <Button title="Sumar" onPress={() => setCount(count + 1)} />
+      <Text style={styles.texto}> Contador:</Text>
+      <Text style={styles.texto2}>{contador} </Text>      {/*soy un comentario shift + alt + A */}
+        <View style={styles.botonesContainer}>
+          <Button color='red' title="Agregar" onPress={()=>setContador(contador + 1)}/>      {/* <Button/> y <Button></Button> tambien funciona*/}
+          <Button color='green' title="Quitar"  onPress={()=>setContador(contador - 1)}/>
+          <Button color='grey' title="Reiniciar" onPress={()=>setContador(contador - contador)}/>
       </View>
-
-      <View style={styles.buttonContainer}>
-        <Button title="Quitar" onPress={() => setCount(count - 1)} />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <Button title="Reiniciar" onPress={() => setCount(0)} />
-      </View>
-
-      <StatusBar style="auto" />
+     <StatusBar style="auto" />
     </View>
   );
 }
 
-//estilos
+//Zona 3: Zona de los estilos, o zona de estetica y posicionamiento
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#6fc4f5ff', //color de fondo 
+    alignItems: 'center',//alinea en eje x
+    justifyContent: 'center',//alinea en eje y
+  },
+  texto:{
+    color:"#661d02ff",
+    fontSize: 30,
+    fontFamily: 'Times New Roman',
+    fontWeight:'bold',
+    fontStyle:'italic',
+    textDecorationLine:'line-through',
+  },
+  
+  texto2:{
+    color:"#eefb62ff",
+    fontSize: 35,
+    fontFamily: 'Courier',
+    fontWeight:'900',//que tan gruesa la letra
+    fontStyle:'normal',
+    textDecorationLine:'underline',
+  },
+  botonesContainer: {
+    marginTop: 15, //margen haia arriba
+    flexDirection: 'row', 
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  buttonContainer: {
-    marginVertical: 8, // separa los botones
-    width: 150, // opcional, para que todos tengan el mismo ancho
+    gap:10, //separacion entre botones
   },
 });
