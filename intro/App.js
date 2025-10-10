@@ -10,12 +10,18 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.texto}> Contador:</Text>
-      <Text style={styles.texto2}>{contador} </Text>      {/*soy un comentario shift + alt + A */}
-        <View style={styles.botonesContainer}>
-          <Button color='red' title="Agregar" onPress={()=>setContador(contador + 1)}/>      {/* <Button/> y <Button></Button> tambien funciona*/}
-          <Button color='green' title="Quitar"  onPress={()=>setContador(contador - 1)}/>
-          <Button color='grey' title="Reiniciar" onPress={()=>setContador(contador - contador)}/>
+      <Text>Contador: {count}</Text>
+
+      <View style={styles.buttonContainer}>
+        <Button title="Sumar" onPress={() => setCount(count + 1)} />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <Button title="Quitar" onPress={() => setCount(count - 1)} />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <Button title="Reiniciar" onPress={() => setCount(0)} />
       </View>
      <StatusBar style="auto" />
     </View>
@@ -26,32 +32,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6fc4f5ff', //color de fondo 
-    alignItems: 'center',//alinea en eje x
-    justifyContent: 'center',//alinea en eje y
-  },
-  texto:{
-    color:"#661d02ff",
-    fontSize: 30,
-    fontFamily: 'Times New Roman',
-    fontWeight:'bold',
-    fontStyle:'italic',
-    textDecorationLine:'line-through',
-  },
-  
-  texto2:{
-    color:"#eefb62ff",
-    fontSize: 35,
-    fontFamily: 'Courier',
-    fontWeight:'900',//que tan gruesa la letra
-    fontStyle:'normal',
-    textDecorationLine:'underline',
-  },
-  botonesContainer: {
-    marginTop: 15, //margen haia arriba
-    flexDirection: 'row', 
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    gap:10, //separacion entre botones
+  },
+  buttonContainer: {
+    marginVertical: 8, // separa los botones
+    width: 150, // opcional, para que todos tengan el mismo ancho
   },
 });
