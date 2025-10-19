@@ -1,15 +1,12 @@
 //Zona 1: Importaciones
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, Switch } from 'react-native';
+import { StyleSheet, Text, View, Button, Switch, TouchableOpacity, Pressable } from 'react-native';
 import React, { useState } from 'react';
 
 //Zona 2: Componente principal
 export default function BotonesScreen() {
   const [modoOscuro, setModoOscuro] = useState(false);
-  const [notificaciones, setNotificaciones] = useState(false);
-  const [ubicacion, setUbicacion] = useState(false);
 
-  //Tema actual
   const tema = modoOscuro ? styles.darkTheme : styles.lightTheme;
   const texto = modoOscuro ? styles.darkText : styles.lightText;
 
@@ -17,30 +14,38 @@ export default function BotonesScreen() {
     <View style={[styles.container, tema]}>
       <Text style={[styles.title, texto]}>Pantalla de Botones y Switches</Text>
 
+      {/* Sección de botones */}
       <View style={styles.section}>
-        <Text style={[styles.subtitulo, texto]}>Botones</Text>
+        <Text style={[styles.subtitulo, texto]}>Tipos de Botones</Text>
 
-        <View style={styles.buttonContainer}>
-          <Button title="Botón Azul" color="#007bff" onPress={() => {}} />
-        </View>
+        {/* 1. Botón básico */}
+        <Button
+          title="Botón Básico"
+          color="#007bff"
+          onPress={() => alert('Presionaste el botón básico')}
+        />
 
-        <View style={styles.buttonContainer}>
-          <Button title="Botón Verde" color="#28a745" onPress={() => {}} />
-        </View>
+        {/* 2. Botón TouchableOpacity */}
+        <TouchableOpacity
+          style={[styles.touchableButton, { backgroundColor: '#28a745' }]}
+          onPress={() => alert('Presionaste el TouchableOpacity')}
+        >
+          <Text style={styles.touchableText}>Botón TouchableOpacity</Text>
+        </TouchableOpacity>
 
-        <View style={styles.buttonContainer}>
-          <Button title="Botón Amarillo" color="#ffc107" onPress={() => {}} />
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <Button title="Botón Rojo" color="#dc3545" onPress={() => {}} />
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <Button title="Botón Morado" color="#6f42c1" onPress={() => {}} />
-        </View>
+        {/* 3. Botón Pressable */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.pressableButton,
+            { backgroundColor: pressed ? '#ffc107' : '#ffca2c' },
+          ]}
+          onPress={() => alert('Presionaste el Pressable')}
+        >
+          <Text style={styles.pressableText}>Botón Pressable</Text>
+        </Pressable>
       </View>
 
+      {/* Sección de switches */}
       <View style={styles.section}>
         <Text style={[styles.subtitulo, texto]}>Switches</Text>
 
@@ -48,27 +53,11 @@ export default function BotonesScreen() {
           <Text style={[styles.switchText, texto]}>Modo Oscuro</Text>
           <Switch value={modoOscuro} onValueChange={() => setModoOscuro(!modoOscuro)} />
         </View>
-
-        <View style={styles.switchRow}>
-          <Text style={[styles.switchText, texto]}>Notificaciones</Text>
-          <Switch value={notificaciones} onValueChange={() => setNotificaciones(!notificaciones)} />
-        </View>
-
-        <View style={styles.switchRow}>
-          <Text style={[styles.switchText, texto]}>Ubicación Activa</Text>
-          <Switch value={ubicacion} onValueChange={() => setUbicacion(!ubicacion)} />
-        </View>
       </View>
 
       <View style={styles.footer}>
         <Text style={[styles.estadoTexto, texto]}>
           Modo Oscuro: {modoOscuro ? 'Activado' : 'Desactivado'}
-        </Text>
-        <Text style={[styles.estadoTexto, texto]}>
-          Notificaciones: {notificaciones ? 'Activadas' : 'Desactivadas'}
-        </Text>
-        <Text style={[styles.estadoTexto, texto]}>
-          Ubicación: {ubicacion ? 'Activa' : 'Inactiva'}
         </Text>
       </View>
 
@@ -104,7 +93,7 @@ const styles = StyleSheet.create({
   },
   section: {
     alignItems: 'center',
-    width: '30%',
+    width: '80%',
     marginBottom: 25,
   },
   subtitulo: {
@@ -113,9 +102,29 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textDecorationLine: 'underline',
   },
-  buttonContainer: {
-    width: '100%',
-    marginVertical: 5,
+  touchableButton: {
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  touchableText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  pressableButton: {
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  pressableText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
   },
   switchRow: {
     flexDirection: 'row',
