@@ -2,9 +2,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import React, { useState } from 'react';
+
+
 import ContadorScreen from './ContadorScreen';
 import BotonesScreen from './BotonesScreen';
 import InputAlertScreen from './InputAlertScreen';
+import FondoScreen from './FondoScreen';
+
 
 //Zona 2: Componente principal
 export default function MenuScreen() {
@@ -12,12 +16,18 @@ export default function MenuScreen() {
 
   // Control de pantallas
   switch (screen) {
-    case 'contador':
+      case 'ContadorScreen':
       return <ContadorScreen />;
-    case 'botones':
+
+      case 'BotonesScreen':
       return <BotonesScreen />;
+
       case 'InputAlertScreen':
       return <InputAlertScreen />;
+
+      case 'FondoScreen':
+      return <FondoScreen />;
+
     default:
       return (
         <View style={styles.container}>
@@ -27,14 +37,14 @@ export default function MenuScreen() {
             {/* Botones del menú */}
             <TouchableOpacity
               style={[styles.button, { backgroundColor: '#007bff' }]}
-              onPress={() => setScreen('contador')}
+              onPress={() => setScreen('ContadorScreen')}
             >
               <Text style={styles.buttonText}>Contador</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, { backgroundColor: '#28a745' }]}
-              onPress={() => setScreen('botones')}
+              onPress={() => setScreen('BotonesScreen')}
             >
             <Text style={styles.buttonText}>Botones</Text>
             </TouchableOpacity>
@@ -46,8 +56,10 @@ export default function MenuScreen() {
             <Text style={styles.buttonText}>InputAlertScreen</Text>  
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#6f42c1' }]}>
-              <Text style={styles.buttonText}>ImageBackground</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#6f42c1' }]}
+            onPress={() => setScreen('FondoScreen')}
+            >
+            <Text style={styles.buttonText}>FondoScreen</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, { backgroundColor: '#20c997' }]}>
