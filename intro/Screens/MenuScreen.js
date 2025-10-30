@@ -8,8 +8,8 @@ import ContadorScreen from './ContadorScreen';
 import BotonesScreen from './BotonesScreen';
 import InputAlertScreen from './InputAlertScreen';
 import FondoScreen from './FondoScreen';
+import ScrollViewScreen from './ScrollViewScreen';
 import LoginScreen from './LoginScreen';
-
 
 //Zona 2: Componente principal
 export default function MenuScreen() {
@@ -28,6 +28,9 @@ export default function MenuScreen() {
 
       case 'FondoScreen':
       return <FondoScreen />;
+
+       case 'ScrollViewScreen':
+      return <ScrollViewScreen />;
 
       case 'LoginScreen':
       return <LoginScreen />;
@@ -66,8 +69,10 @@ export default function MenuScreen() {
             <Text style={styles.buttonText}>FondoScreen</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#20c997' }]}>
-              <Text style={styles.buttonText}>ScrollView</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#20c997' }]}
+            onPress={() => setScreen('ScrollViewScreen')}
+            >
+            <Text style={styles.buttonText}>ScrollViewScreen</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, { backgroundColor: '#fd7e14' }]}>

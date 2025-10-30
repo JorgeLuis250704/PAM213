@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 
 export default function LoginScreen() {
+  
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [terminos, setTerminos] = useState(false);
