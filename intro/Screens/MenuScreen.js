@@ -14,6 +14,7 @@ import Indicator from './Indicator';
 import FlatListScreen from './FlatListScreen';
 import SectionList from './SectionList';
 import ModalScreen from './ModalScreen';
+import BottomSheetScreen from './BottomSheetScreen';
 
 //Zona 2: Componente principal
 export default function MenuScreen() {
@@ -50,6 +51,9 @@ export default function MenuScreen() {
 
       case 'ModalScreen':
       return <ModalScreen />;
+
+      case 'BottomSheetScreen':
+      return <BottomSheetScreen />;
 
     default:
       return (
@@ -91,6 +95,13 @@ export default function MenuScreen() {
             <Text style={styles.buttonText}>ScrollView</Text>
             </TouchableOpacity>
 
+             <TouchableOpacity 
+            style={[styles.button, { backgroundColor: '#17a2b8' }]}
+            onPress={() => setScreen('LoginScreen')}
+            >
+            <Text style={styles.buttonText}>LoginScreen</Text>  
+            </TouchableOpacity>
+
             <TouchableOpacity style={[styles.button, { backgroundColor: '#fd7e14' }]}
             onPress={() => setScreen('Indicator')}
             >
@@ -109,23 +120,17 @@ export default function MenuScreen() {
             <Text style={styles.buttonText}>SectionList</Text>
             </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.button, { backgroundColor: '#dc3545' }]}
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#dc3545' }]}
             onPress={() => setScreen('ModalScreen')}
             >
             <Text style={styles.buttonText}>Modal</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#343a40' }]}>
-              <Text style={styles.buttonText}>Bottom Sheet</Text>
-            </TouchableOpacity>
-
-             <TouchableOpacity 
-            style={[styles.button, { backgroundColor: '#17a2b8' }]}
-            onPress={() => setScreen('LoginScreen')}
+             <TouchableOpacity style={[styles.button, { backgroundColor: '#343a40' }]}
+            onPress={() => setScreen('BottomSheetScreen')}
             >
-            <Text style={styles.buttonText}>LoginScreen</Text>  
+            <Text style={styles.buttonText}>BottomSheet</Text>
             </TouchableOpacity>
-
           </View>
         </View>
       );

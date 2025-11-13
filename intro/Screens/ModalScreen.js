@@ -34,13 +34,6 @@ const ModalScreen = () => {
     botonCerrar();
   };
 
-  const botonCerrar = () => {
-    setModalVisible(false);
-    setDescripcion('');
-    setNumFavorito('');
-    setGasto(true);
-  };
-
     return (
         <View style={styles.container}>
             <TouchableOpacity style={styles.botonMostrar} onPress={() => setModalVisible(true)}>
@@ -193,5 +186,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
-
 
