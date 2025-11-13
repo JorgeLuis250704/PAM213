@@ -1,9 +1,7 @@
 import { Text, StyleSheet, View, TouchableOpacity, Switch, TextInput, Alert, Platform, Modal } from 'react-native'
 import React, { useState } from 'react'
-// Importamos Modal de 'react-native' en lugar de 'react-native-web'
 
 const ModalScreen = () => {
-    // 1. Uso correcto de Hooks (useState)
     const [modalVisible, setModalVisible] = useState(false);
     const [descripcion, setDescripcion] = useState('');
     const [numfav, setNumFav] = useState('');
@@ -16,15 +14,35 @@ const ModalScreen = () => {
         setGasto(true);
     };
 
-    const botonGuardar = () => {
-        Alert.alert('Guardado', `Descripción: ${descripcion}, Número: ${numfav}, Gasto: ${gasto ? 'Activo' : 'Inactivo'}`);
-        botonCerrar(); // Cierra el modal después de guardar
-    };
+ const botonGuardar = () => {
+    if (!descripcion || !numFavorito) {
+      if (Platform.OS === 'web') {
+        alert('Error: Por favor completa todos los campos');
+      } else {
+        Alert.alert('Error', 'Por favor completa todos los campos');
+      }
+      return;
+    }
+
+    if (Platform.OS === 'web') {
+      alert(`Éxito: Prueba Realizada. Nombre: ${descripcion} y Número favorito: ${numFavorito}`);
+    } else {
+      Alert.alert('Éxito', `Prueba Realizada. Nombre: ${descripcion} y Número favorito: ${numFavorito}`);
+      alert('Éxito', `Prueba Realizada. Nombre: ${descripcion} y Número favorito: ${numFavorito}`);
+    }
+
+    botonCerrar();
+  };
+
+  const botonCerrar = () => {
+    setModalVisible(false);
+    setDescripcion('');
+    setNumFavorito('');
+    setGasto(true);
+  };
 
     return (
-        // 2. Corregido: Usar 'style' en lugar de 'styles'
         <View style={styles.container}>
-            {/* 3. Corregido: Usar 'style' en lugar de 'styles' y <Text> en lugar de <text> */}
             <TouchableOpacity style={styles.botonMostrar} onPress={() => setModalVisible(true)}>
                 <Text style={styles.botonMostrarTexto}>Mostrar Modal</Text>
             </TouchableOpacity>
@@ -36,40 +54,33 @@ const ModalScreen = () => {
                 onRequestClose={botonCerrar}
             >
 
-                {/* 4. Corregido: Usar <View> en lugar de <view> */}
                 <View style={styles.modalContenedor}>
                     <View style={styles.modalVista}>
-                        {/* 5. Corregido: Usar <Text> en lugar de <text> */}
                         <Text style={styles.modalTitulo}>Prueba De Modal</Text>
-
-                        {/* 6. Corregido: Usar '.' en lugar de '-' para acceder a estilos */}
                         <TextInput style={styles.modalInput}
                             placeholder='name'
                             placeholderTextColor="#888"
-                            value={descripcion} // 7. Corregido: Usar variable de estado, no string
+                            value={descripcion} 
                             onChangeText={setDescripcion}
                         />
 
                         <TextInput style={styles.modalInput}
                             placeholder='numero'
                             placeholderTextColor="#888"
-                            value={numfav} // 7. Corregido: Usar variable de estado, no string
+                            value={numfav}
                             keyboardType='numeric'
                             onChangeText={setNumFav}
                         />
 
                         <View style={styles.switchContenedor}>
-                            {/* 8. Corregido: Usar '.' en lugar de '-' y estilo condicional */}
                             <Text style={[styles.switchTexto, !gasto && styles.switchTextoActivoVerde]}>Activo</Text>
                             
                             <Switch 
                                 trackColor={{ false: '#DCFCE7', true: '#FEE2E2' }}
                                 thumbColor={gasto ? '#EF4444' : '#22C55E'}
-                                onValueChange={() => setGasto(!gasto)} // 9. Corregido: onValueChange
+                                onValueChange={() => setGasto(!gasto)}
                                 value={gasto}
                             />
-                            
-                            {/* 8. Corregido: Estilo condicional */}
                             <Text style={[styles.switchTexto, gasto && styles.switchTextoActivoRojo]}>Inactivo</Text>
                         </View>
 
@@ -78,7 +89,6 @@ const ModalScreen = () => {
                                 <Text style={styles.botonCancelarTexto}>Cancelar</Text>
                             </TouchableOpacity>
 
-                            {/* 10. Corregido: Eliminada la View duplicada y botón guardar */}
                             <TouchableOpacity style={[styles.botonBase, styles.botonGuardar]} onPress={botonGuardar}>
                                 <Text style={styles.botonGuardarTexto}>Guardar</Text> 
                             </TouchableOpacity>
@@ -91,8 +101,6 @@ const ModalScreen = () => {
 }
 
 export default ModalScreen;
-
-// 11. Estilos Básicos añadidos para que sea visible
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -185,3 +193,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
+
