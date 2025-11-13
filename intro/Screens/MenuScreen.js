@@ -10,6 +10,10 @@ import InputAlertScreen from './InputAlertScreen';
 import FondoScreen from './FondoScreen';
 import ScrollViewScreen from './ScrollViewScreen';
 import LoginScreen from './LoginScreen';
+import Indicator from './Indicator';
+import FlatListScreen from './FlatListScreen';
+import SectionList from './SectionList';
+import ModalScreen from './ModalScreen';
 
 //Zona 2: Componente principal
 export default function MenuScreen() {
@@ -34,6 +38,18 @@ export default function MenuScreen() {
 
       case 'LoginScreen':
       return <LoginScreen />;
+
+       case 'Indicator':
+      return <Indicator />;
+
+      case 'FlatListScreen':
+      return <FlatListScreen />;
+
+      case 'SectionList':
+      return <SectionList />;
+
+      case 'ModalScreen':
+      return <ModalScreen />;
 
     default:
       return (
@@ -60,31 +76,43 @@ export default function MenuScreen() {
             style={[styles.button, { backgroundColor: '#17a2b8' }]}
             onPress={() => setScreen('InputAlertScreen')}
             >
-            <Text style={styles.buttonText}>InputAlertScreen</Text>  
+            <Text style={styles.buttonText}>InputAlert</Text>  
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, { backgroundColor: '#6f42c1' }]}
             onPress={() => setScreen('FondoScreen')}
             >
-            <Text style={styles.buttonText}>FondoScreen</Text>
+            <Text style={styles.buttonText}>Fondo</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, { backgroundColor: '#20c997' }]}
             onPress={() => setScreen('ScrollViewScreen')}
             >
-            <Text style={styles.buttonText}>ScrollViewScreen</Text>
+            <Text style={styles.buttonText}>ScrollView</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#fd7e14' }]}>
-              <Text style={styles.buttonText}>ActivityIndicator</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#fd7e14' }]}
+            onPress={() => setScreen('Indicator')}
+            >
+            <Text style={styles.buttonText}>ActivityIndicator</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#ffc107' }]}>
-              <Text style={styles.buttonText}>FlatList</Text>
+            <TouchableOpacity style={[styles.button, { backgroundColor: '#ffc107' }]}
+            onPress={() => setScreen('FlatListScreen')}
+            >
+            <Text style={styles.buttonText}>FlatList</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#dc3545' }]}>
-              <Text style={styles.buttonText}>Modal</Text>
+              <TouchableOpacity style={[styles.button, { backgroundColor: '#ffc107' }]}
+            onPress={() => setScreen('SectionList')}
+            >
+            <Text style={styles.buttonText}>SectionList</Text>
+            </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.button, { backgroundColor: '#dc3545' }]}
+            onPress={() => setScreen('ModalScreen')}
+            >
+            <Text style={styles.buttonText}>Modal</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.button, { backgroundColor: '#343a40' }]}>
