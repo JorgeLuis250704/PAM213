@@ -1,131 +1,121 @@
-import React, { useRef, useMemo } from "react";
-import {
-  Text,
-  StyleSheet,
-  View,
-  Button,
-  StatusBar,
-  Pressable,
-  Image,
-} from "react-native";
+import React,{useRef,useMemo} from 'react';
+import{Text,StyleSheet,View,Button,StatusBar,Pressable,Image} from 'react-native';
+import BottomSheet,{BottomSheetView} from '@gorhom/bottom-sheet';
 
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+export default function BottomSheetScreen(){
+  const sheetRef=useRef('null');
+  const snapPoints=useMemo(()=>["45%","75%","100%"]);
 
-export default function BottomSheetScreen() {
-  const sheetRef = useRef(null);
-
-  const snapPoints = useMemo(() => ["45%", "75%", "100%"], []);
-
-  const handleCloseSheet = () => {
+  const handleCloseSheet=()=>{
     sheetRef.current?.close();
   };
-
-  const handleOpenSheet = () => {
+  const handleOpenSheet= ()=>{
     sheetRef.current?.snapToIndex(0);
   };
-
-  return (
-    <View style={Styles.container}>
-      <Text style={Styles.headerText}>Pantalla Principal</Text>
-
-      <Button
-        title="Abrir BottomSheet"
-        onPress={handleOpenSheet}
-        color="#311c7cff"
-      />
+  return(
+    <View style={styles.container}>
+      <Text style={styles.headerText}>Pantalla principal</Text>
 
       <Button
-        title="Cerrar BottomSheet"
-        onPress={handleCloseSheet}
-        color="red"
-      />
+       title='Abrir BottomSheet'
+       onPress={handleOpenSheet}
+       color="#311c7cff"
+       />
+       <Button
+       title='Cerrar BottomSheet'
+       onPress={handleCloseSheet}
+       color="red"
+       />
 
-      <BottomSheet
-        ref={sheetRef}
-        snapPoints={snapPoints}
-        index={-1} 
-        enablePanDownToClose={true}
-        handleIndicatorStyle={Styles.handleIndicator}
-      >
-        <BottomSheetView style={Styles.content}>
-          <StatusBar barStyle="dark-content" />
-
+       <BottomSheet
+       ref={sheetRef}
+       snapPoints={snapPoints}
+       index={-1}
+       enablePanDownToClose={true}
+       handleIndicatorStyle={styles.handleIndicator}
+       >
+        <BottomSheetView style={styles.content}>
+          <StatusBar barStyle="dark-content"/>
           <Image
-            source={require("../assets/OIP2.png")}
-            style={Styles.gifStyle}
+            source={require('../assets/recursos/helado.gif')}
+            style={styles.gifstyle}
             resizeMode="contain"
           />
+          <Text style={styles.welcomeText}>!Bienvenido</Text>
+          <Text style={styles.bodyText}>
+            Este es un ejemplo de BotoomSheet
+          </Text>
 
-          <Text style={Styles.welcomeText}>Bienvenido</Text>
-
-          <Text style={Styles.bodyText}>BottomSheet</Text>
-
-          <Pressable style={Styles.customButton} onPress={handleCloseSheet}>
-            <Text style={Styles.customButtonText}>Entendido</Text>
+          <Pressable
+            style={styles.customButton}
+            onPress={handleCloseSheet}
+            >
+              <Text style={styles.customButtonText}>Entendido</Text>
           </Pressable>
         </BottomSheetView>
       </BottomSheet>
-    </View>
+      </View>
   );
 }
-
-const Styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f4f4f4",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
+const styles = StyleSheet.create({
+  container:{
+    flex:1,
+    backgroundColor:'white', 
+    alignItems:'center',
+    justifyContent:'center',
+    gap: 15, 
   },
-
   headerText: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 20,
     marginBottom: 20,
-    color: "#311c7cff",
   },
-
-  handleIndicator: {
-    backgroundColor: "#311c7cff",
-    width: 60,
-  },
-
+  
   content: {
     flex: 1,
-    alignItems: "center",
-    paddingVertical: 20,
+    backgroundColor: '#8c8a8aff',
+    alignItems: 'center',
+    padding: 20,
+    gap: 15, 
   },
-
-  gifStyle: {
-    width: 180,
-    height: 180,
+  handleIndicator: {
+    backgroundColor: '#ccc', 
+    width: 40,
+  },
+  gifStyle: { 
+    width: 150, 
+    height: 150, 
     marginBottom: 10,
   },
-
   welcomeText: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#000",
-    marginTop: 10,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#e2e0e9ff',
+    paddingTop: 0, 
   },
-
-  bodyText: {
+  bodyText: { 
     fontSize: 16,
-    color: "#555",
-    marginBottom: 20,
+    color: '#e2e0e9ff',
+    textAlign: 'center',
+    marginHorizontal: 10,
   },
-
-  customButton: {
-    marginTop: 15,
-    backgroundColor: "#311c7cff",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+  customButton: { 
+    backgroundColor: '#311c7cff', 
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25, 
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-
-  customButtonText: {
-    color: "#fff",
+  customButtonText: { 
+    color: 'white',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
 });
