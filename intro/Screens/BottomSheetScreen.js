@@ -37,7 +37,7 @@ export default function BottomSheetScreen(){
         <BottomSheetView style={styles.content}>
           <StatusBar barStyle="dark-content"/>
           <Image
-            source={require('../assets/recursos/helado.gif')}
+            source={require('../assets/OIP.jpg')}
             style={styles.gifstyle}
             resizeMode="contain"
           />
