@@ -1,33 +1,61 @@
+// models/Usuario.js
+
 export class Usuario {
+
     /**
-     * Define la estructura y el estado de la entidad Usuario.
-     * @param {number} id - Identificador único.
-     * @param {string} nombre - Nombre del usuario.
-     * @param {string} fechaCreacion - Fecha de creación en formato ISO string.
+     * Modelo Usuario en arquitectura MVC.
+     * @param {number} id
+     * @param {string} nombre
+     * @param {string} fechaCreacion
      */
     constructor(id, nombre, fechaCreacion) {
         this.id = id;
-        this.nombre = nombre;
-        // Si no se proporciona fecha, usa la fecha y hora actual en formato ISO
-        this.fechaCreacion = fechaCreacion || new Date().toISOString(); 
+        this.nombre = nombre?.trim(); 
+        this.fechaCreacion = fechaCreacion || new Date().toISOString();
     }
 
-    // --- Validaciones de Reglas de Negocio (Estáticas) ---
+    // ------------------------------------------------------------------
+    // ---------------- REGLAS DE NEGOCIO / VALIDACIONES ----------------
+    // ------------------------------------------------------------------
+
     /**
      * Valida que el nombre cumpla con las reglas de negocio.
-     * Lanza un error si la validación falla.
-     * Este método se llama desde el UsuarioController antes de intentar guardar en la BD.
-     * @param {string} nombre - El nombre a validar.
+     * @param {string} nombre
      */
     static validar(nombre) {
         if (!nombre || nombre.trim().length === 0) {
-            // Lanza un error si el nombre está vacío o solo contiene espacios
-            throw new Error('El nombre no puede estar vacío');
+            throw new Error("El nombre no puede estar vacío");
         }
-        if (nombre.length > 50) {
-            // Lanza un error si el nombre excede el límite
-            throw new Error('El nombre no puede tener más de 50 caracteres');
+        if (nombre.trim().length > 50) {
+            throw new Error("El nombre no puede tener más de 50 caracteres");
         }
         return true;
+    }
+
+    // ------------------------------------------------------------------
+    // -------------------- MÉTODOS AUXILIARES --------------------------
+    // ------------------------------------------------------------------
+
+    /**
+     * Crea un objeto Usuario a partir de una fila de SQLite.
+     */
+    static fromDatabase(row) {
+        return new Usuario(
+            row.id,
+            row.nombre,
+            row.fecha_creacion
+        );
+    }
+
+    /**
+     * Serializa el usuario a un objeto JSON.
+     * Sirve para localStorage, APIs, etc.
+     */
+    toJSON() {
+        return {
+            id: this.id,
+            nombre: this.nombre,
+            fechaCreacion: this.fechaCreacion
+        };
     }
 }

@@ -1,6 +1,6 @@
+// database/DatabaseService.js
 import { Platform } from 'react-native';
-// Asegúrate de tener instalado expo-sqlite: expo install expo-sqlite
-import * as SQLite from 'expo-sqlite'; 
+import * as SQLite from 'expo-sqlite';
 
 class DatabaseService {
     constructor() {
@@ -8,18 +8,13 @@ class DatabaseService {
         this.storageKey = 'usuarios';
     }
 
-    /**
-     * Inicializa la conexión a la base de datos (SQLite) o confirma el uso de LocalStorage (Web).
-     */
     async initialize() {
         if (Platform.OS === 'web') {
-            console.log('Usando LocalStorage para web');
+            console.log('Usando LocalStorage (WEB)');
         } else {
-            console.log('Usando SQLite para móvil');
-            // Abre la base de datos SQLite
+            console.log('Usando SQLite (MÓVIL)');
             this.db = await SQLite.openDatabaseAsync('miapp.db');
 
-            // Crea la tabla si no existe
             await this.db.execAsync(`
                 CREATE TABLE IF NOT EXISTS usuarios (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,51 +25,100 @@ class DatabaseService {
         }
     }
 
-    /**
-     * Obtiene todos los usuarios persistidos.
-     * @returns {Promise<Array>} Lista de objetos de usuario.
-     */
+    // --------------------------------------------
+    // SELECT
+    // --------------------------------------------
     async getAll() {
         if (Platform.OS === 'web') {
             const data = localStorage.getItem(this.storageKey);
             return data ? JSON.parse(data) : [];
         } else {
-            // Usa el método para obtener todos los resultados de una consulta
-            return await this.db.getAllAsync('SELECT * FROM usuarios ORDER BY id DESC');
+            return await this.db.getAllAsync(
+                'SELECT * FROM usuarios ORDER BY id DESC'
+            );
         }
     }
 
-    /**
-     * Agrega un nuevo usuario a la persistencia.
-     * @param {string} nombre - El nombre del nuevo usuario.
-     * @returns {Promise<Object>} El objeto del usuario creado con su ID.
-     */
+    // --------------------------------------------
+    // INSERT
+    // --------------------------------------------
     async add(nombre) {
         if (Platform.OS === 'web') {
-            const usuarios = await this.getAll();
-            const nuevoUsuario = {
-                id: Date.now(), // Usamos timestamp como ID simulado
+            const lista = await this.getAll();
+            const nuevo = {
+                id: Date.now(),
                 nombre,
                 fecha_creacion: new Date().toISOString()
             };
-            usuarios.unshift(nuevoUsuario); // Agregar al inicio
-            localStorage.setItem(this.storageKey, JSON.stringify(usuarios));
-            return nuevoUsuario;
+            lista.unshift(nuevo);
+            localStorage.setItem(this.storageKey, JSON.stringify(lista));
+            return nuevo;
         } else {
-            // Ejecuta la consulta de inserción con parámetros seguros
+            const fecha = new Date().toISOString();
             const result = await this.db.runAsync(
-                'INSERT INTO usuarios(nombre, fecha_creacion) VALUES(?, ?)',
-                [nombre, new Date().toISOString()]
+                'INSERT INTO usuarios (nombre, fecha_creacion) VALUES (?, ?)',
+                [nombre, fecha]
             );
-            // Retorna el objeto del nuevo usuario con el ID generado por SQLite
             return {
                 id: result.lastInsertRowId,
                 nombre,
-                fecha_creacion: new Date().toISOString()
+                fecha_creacion: fecha
             };
+        }
+    }
+
+    // --------------------------------------------
+    // UPDATE
+    // --------------------------------------------
+    async update(id, nuevoNombre) {
+        if (Platform.OS === 'web') {
+            const lista = await this.getAll();
+            const nuevaLista = lista.map(u =>
+                u.id === id
+                    ? { ...u, nombre: nuevoNombre }
+                    : u
+            );
+            localStorage.setItem(this.storageKey, JSON.stringify(nuevaLista));
+            return true;
+        } else {
+            await this.db.runAsync(
+                'UPDATE usuarios SET nombre = ? WHERE id = ?',
+                [nuevoNombre, id]
+            );
+            return true;
+        }
+    }
+
+    // --------------------------------------------
+    // DELETE (1 usuario)
+    // --------------------------------------------
+    async delete(id) {
+        if (Platform.OS === 'web') {
+            const lista = await this.getAll();
+            const nuevaLista = lista.filter(u => u.id !== id);
+            localStorage.setItem(this.storageKey, JSON.stringify(nuevaLista));
+            return true;
+        } else {
+            await this.db.runAsync(
+                'DELETE FROM usuarios WHERE id = ?',
+                [id]
+            );
+            return true;
+        }
+    }
+
+    // --------------------------------------------
+    // DELETE ALL
+    // --------------------------------------------
+    async deleteAll() {
+        if (Platform.OS === 'web') {
+            localStorage.removeItem(this.storageKey);
+            return true;
+        } else {
+            await this.db.runAsync('DELETE FROM usuarios');
+            return true;
         }
     }
 }
 
-// Exportar una única instancia de la clase (Singleton)
 export default new DatabaseService();

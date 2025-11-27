@@ -1,138 +1,234 @@
+// App.js
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ActivityIndicator, Platform } from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    FlatList,
+    StyleSheet,
+    Alert,
+    ActivityIndicator,
+    Platform,
+    Modal,
+    KeyboardAvoidingView,
+    TouchableWithoutFeedback,
+    Keyboard
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-// Importa el controlador
-// CORRECCIÓN DE RUTA APLICADA: Asume que 'controllers' está al mismo nivel que 'App.js'
-import { UsuarioController } from './controllers/UsuarioController'; 
+// Importa el controlador (ajusta la ruta si tu estructura es diferente)
+import { UsuarioController } from './controllers/UsuarioController';
 
-// Crea una instancia única del controlador
+// Instancia única del controlador
 const usuarioController = new UsuarioController();
 
-// Componente para renderizar cada usuario en la lista (basado en el diseño deseado)
-const renderUserItem = ({ item, index }) => (
-    <View style={styles.userItem}>
-        <View style={styles.userNumber}>
-            <Text style={styles.userNumberText}>{index + 1}</Text>
-        </View>
-        <View style={styles.userInfo}>
-            <Text style={styles.userName}>{item.nombre}</Text>
-            <Text style={styles.userId}>ID: {item.id}</Text>
-            <Text style={styles.userDate}>
-                Creado: {new Date(item.fechaCreacion).toLocaleString()}
-            </Text>
-        </View>
-    </View>
-);
-
 export default function App() {
+    // Datos y estados
     const [usuarios, setUsuarios] = useState([]);
     const [nombre, setNombre] = useState('');
-    const [loading, setLoading] = useState(true); // Para la carga inicial/recarga
-    const [guardando, setGuardando] = useState(false); // Para el botón de inserción
+    const [loading, setLoading] = useState(true);
+    const [guardando, setGuardando] = useState(false);
     const [error, setError] = useState('');
 
-    // --- Funciones del Controlador ---
+    // Estados para EDIT (modal)
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editingUser, setEditingUser] = useState(null); // objeto usuario
+    const [editName, setEditName] = useState('');
+    const [guardandoEdit, setGuardandoEdit] = useState(false);
 
-    // Función de recarga de datos (SELECT)
+    // --- Cargar usuarios (SELECT) ---
     const cargarUsuarios = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
-            // El controlador invoca el servicio de consulta (SELECT)
-            const lista = await usuarioController.obtenerUsuarios(); 
+            const lista = await usuarioController.obtenerUsuarios();
             setUsuarios(lista);
         } catch (err) {
-            console.error("Error al cargar:", err.message);
-            setError("Error al cargar usuarios.");
+            console.error('Error al cargar:', err?.message || err);
+            setError('Error al cargar usuarios.');
+            Alert.alert('Error', 'No se pudo cargar la lista de usuarios.');
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Función de inserción de datos (INSERT)
+    // --- Crear usuario (INSERT) ---
     const handleCrearUsuario = async () => {
         if (nombre.trim() === '') {
-            setError("El nombre no puede estar vacío.");
+            setError('El nombre no puede estar vacío.');
             return;
         }
 
         setGuardando(true);
         setError('');
         try {
-            // 1. Llama al controlador para crear el usuario y CAPTURA el objeto devuelto.
-            // El controlador valida, inserta y notifica a los observadores.
-            const usuarioCreado = await usuarioController.crearUsuario(nombre); 
-            
-            setNombre(''); 
-            
-            // 2. Muestra la alerta de éxito al usuario (responsabilidad de la Vista).
+            const usuarioCreado = await usuarioController.crearUsuario(nombre);
+            setNombre('');
             Alert.alert(
-                "Usuario Creado",
+                'Usuario Creado',
                 `"${usuarioCreado.nombre}" guardado con ID: ${usuarioCreado.id}`
             );
-
-            // La lista se actualiza automáticamente debido a la notificación del Observer.
+            // No llamamos a cargarUsuarios() manualmente: observer lo hará
         } catch (err) {
-            console.error("Error al guardar:", err.message);
-            // Muestra el error de validación del modelo
-            setError(err.message); 
-            Alert.alert("Error", err.message);
+            console.error('Error al guardar:', err?.message || err);
+            setError(err?.message || 'Error al guardar el usuario.');
+            Alert.alert('Error', err?.message || 'Error al guardar el usuario.');
         } finally {
             setGuardando(false);
         }
     };
 
-    // --- Inicialización y Observador (Patrón Observer) ---
+    // --- ELIMINAR 1 USUARIO ---
+    const handleDelete = (id) => {
+        Alert.alert(
+            'Confirmar',
+            '¿Deseas eliminar este usuario?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await usuarioController.eliminarUsuario(id);
+                            // notifyListeners actualizará la lista
+                        } catch (err) {
+                            console.error('Error al eliminar:', err?.message || err);
+                            Alert.alert('Error', err?.message || 'No se pudo eliminar.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
+    // --- ELIMINAR TODOS ---
+    const handleDeleteAll = () => {
+        Alert.alert(
+            'Confirmar',
+            '¿Eliminar TODOS los usuarios?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar Todo',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await usuarioController.eliminarTodos();
+                        } catch (err) {
+                            console.error('Error al eliminar todo:', err?.message || err);
+                            Alert.alert('Error', err?.message || 'No se pudo eliminar todo.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    // --- ABRIR MODAL DE EDICIÓN ---
+    const handleOpenEdit = (usuario) => {
+        setEditingUser(usuario);
+        setEditName(usuario.nombre);
+        setEditModalVisible(true);
+    };
+
+    // --- GUARDAR CAMBIOS (UPDATE) ---
+    const handleSaveEdit = async () => {
+        if (!editingUser) return;
+        if (!editName || editName.trim() === '') {
+            Alert.alert('Validación', 'El nombre no puede estar vacío.');
+            return;
+        }
+
+        setGuardandoEdit(true);
+        try {
+            await usuarioController.actualizarUsuario(editingUser.id, editName.trim());
+            setEditModalVisible(false);
+            setEditingUser(null);
+            setEditName('');
+            Alert.alert('Actualizado', 'Usuario actualizado correctamente.');
+            // notifyListeners actualizará la lista
+        } catch (err) {
+            console.error('Error al actualizar:', err?.message || err);
+            Alert.alert('Error', err?.message || 'No se pudo actualizar.');
+        } finally {
+            setGuardandoEdit(false);
+        }
+    };
+
+    // --- Observer + Inicialización ---
     useEffect(() => {
-        // Callback del Observador: se ejecuta cuando el controlador notifica un cambio
         const observerCallback = () => {
-            console.log("NOTIFICACIÓN RECIBIDA: El controlador forzará la recarga de la lista.");
-            cargarUsuarios(); 
+            console.log('NOTIFICACIÓN: recargando lista desde observer.');
+            cargarUsuarios();
         };
 
         const initializeApp = async () => {
             try {
-                // 1. Inicializa la BD (crea tablas, etc.)
                 await usuarioController.initialize();
-                
-                // 2. Carga la lista inicial
-                cargarUsuarios(); 
-                
-                // 3. Se suscribe al controlador para recibir notificaciones
+                await cargarUsuarios();
                 usuarioController.addListener(observerCallback);
-
             } catch (initError) {
-                console.error("Error de inicialización:", initError);
-                setError("Error grave de inicialización de la base de datos.");
+                console.error('Error de inicialización:', initError);
+                setError('Error grave de inicialización de la base de datos.');
             }
         };
 
         initializeApp();
 
-        // 4. Función de cleanup (Desuscripción)
         return () => {
             usuarioController.removeListener(observerCallback);
         };
     }, [cargarUsuarios]);
 
-    // --- Renderizado de la Pantalla ---
+    // --- RENDER ITEM con botones EDIT y DELETE ---
+    const renderUserItem = ({ item, index }) => (
+        <View style={styles.userItem}>
+            <View style={styles.userNumber}>
+                <Text style={styles.userNumberText}>{index + 1}</Text>
+            </View>
+
+            <View style={styles.userInfo}>
+                <Text style={styles.userName}>{item.nombre}</Text>
+                <Text style={styles.userId}>ID: {item.id}</Text>
+                <Text style={styles.userDate}>
+                    Creado: {new Date(item.fechaCreacion).toLocaleString()}
+                </Text>
+            </View>
+
+            <View style={styles.actionsContainer}>
+                <TouchableOpacity
+                    style={[styles.actionButton, styles.updateButton]}
+                    onPress={() => handleOpenEdit(item)}
+                >
+                    <Text style={styles.actionButtonText}>Editar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDelete(item.id)}
+                >
+                    <Text style={styles.actionButtonText}>Borrar</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
     return (
         <View style={styles.container}>
             <StatusBar style="auto" />
 
-            {/* Zona del encabezado */}
+            {/* Header */}
             <Text style={styles.title}>INSERT & SELECT</Text>
             <Text style={styles.subtitle}>
                 {Platform.OS === 'web' ? ' WEB (LocalStorage)' : ` ${Platform.OS.toUpperCase()} (SQLite)`}
             </Text>
 
-            {/* Mensaje de Error */}
+            {/* Error */}
             {error ? <Text style={[styles.errorText, { marginBottom: 15 }]}>{error}</Text> : null}
 
-            {/* Zona del INSERT */}
+            {/* Insert section */}
             <View style={styles.insertSection}>
                 <Text style={styles.sectionTitle}>Insertar Usuario</Text>
 
@@ -144,30 +240,40 @@ export default function App() {
                     editable={!guardando}
                 />
 
-                <TouchableOpacity 
-                    style={[styles.button, (guardando || nombre.trim().length === 0) && styles.buttonDisabled]} 
+                <TouchableOpacity
+                    style={[styles.button, (guardando || nombre.trim().length === 0) && styles.buttonDisabled]}
                     onPress={handleCrearUsuario}
-                    disabled={guardando || nombre.trim().length === 0} >
-
+                    disabled={guardando || nombre.trim().length === 0}
+                >
                     <Text style={styles.buttonText}>
                         {guardando ? ' Guardando...' : 'Agregar Usuario'}
                     </Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Zona del SELECT */}
+            {/* Select / list */}
             <View style={styles.selectSection}>
                 <View style={styles.selectHeader}>
                     <Text style={styles.sectionTitle}>Lista de Usuarios</Text>
-                    
-                    {/* Botón de recarga manual */}
-                    <TouchableOpacity 
-                        style={styles.refreshButton}
-                        onPress={cargarUsuarios}
-                        disabled={loading} >
-                        <Text style={styles.refreshText}>{loading && usuarios.length > 0 ? 'Cargando...' : 'Recargar'}</Text>
-                    </TouchableOpacity>
 
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity
+                            style={styles.refreshButton}
+                            onPress={cargarUsuarios}
+                            disabled={loading}
+                        >
+                            <Text style={styles.refreshText}>
+                                {loading && usuarios.length > 0 ? 'Cargando...' : 'Recargar'}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.deleteAllButton}
+                            onPress={handleDeleteAll}
+                        >
+                            <Text style={styles.deleteAllText}>Eliminar Todo</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {loading && usuarios.length === 0 ? (
@@ -190,6 +296,63 @@ export default function App() {
                     />
                 )}
             </View>
+
+            {/* EDIT MODAL */}
+            <Modal
+                visible={editModalVisible}
+                animationType="slide"
+                transparent
+                onRequestClose={() => {
+                    if (!guardandoEdit) {
+                        setEditModalVisible(false);
+                        setEditingUser(null);
+                        setEditName('');
+                    }
+                }}
+            >
+                <KeyboardAvoidingView
+                    style={styles.modalWrapper}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Editar Usuario</Text>
+
+                            <TextInput
+                                style={styles.input}
+                                value={editName}
+                                onChangeText={setEditName}
+                                editable={!guardandoEdit}
+                                placeholder="Nuevo nombre"
+                            />
+
+                            <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                                <TouchableOpacity
+                                    style={[styles.button, { flex: 1, marginRight: 8 }]}
+                                    onPress={() => {
+                                        setEditModalVisible(false);
+                                        setEditingUser(null);
+                                        setEditName('');
+                                    }}
+                                    disabled={guardandoEdit}
+                                >
+                                    <Text style={styles.buttonText}>Cancelar</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.button, (guardandoEdit) && styles.buttonDisabled, { flex: 1 }]}
+                                    onPress={handleSaveEdit}
+                                    disabled={guardandoEdit}
+                                >
+                                    <Text style={styles.buttonText}>
+                                        {guardandoEdit ? 'Guardando...' : 'Guardar'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </KeyboardAvoidingView>
+            </Modal>
         </View>
     );
 }
@@ -280,6 +443,13 @@ const styles = StyleSheet.create({
         color: '#007AFF',
         fontSize: 14,
     },
+    deleteAllButton: {
+        marginLeft: 12,
+    },
+    deleteAllText: {
+        color: 'red',
+        fontWeight: 'bold',
+    },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -291,7 +461,7 @@ const styles = StyleSheet.create({
         color: '#666',
         fontSize: 14,
     },
-    // Estilos para la lista (Diseño de la imagen)
+    // Lista
     userItem: {
         flexDirection: 'row',
         backgroundColor: '#f9f9f9',
@@ -300,6 +470,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderLeftWidth: 4,
         borderLeftColor: '#007AFF',
+        alignItems: 'center',
     },
     userNumber: {
         width: 35,
@@ -332,6 +503,28 @@ const styles = StyleSheet.create({
     userDate: {
         fontSize: 12,
         color: '#666',
+    },
+    actionsContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 10,
+    },
+    actionButton: {
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 6,
+        marginBottom: 5,
+    },
+    actionButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    updateButton: {
+        backgroundColor: '#FF9500',
+    },
+    deleteButton: {
+        backgroundColor: '#FF3B30',
     },
     emptyContainer: {
         alignItems: 'center',
@@ -374,5 +567,29 @@ const styles = StyleSheet.create({
         color: 'red',
         textAlign: 'center',
         fontWeight: '600',
+    },
+
+    /* Modal styles */
+    modalWrapper: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 6,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 12,
+        color: '#333',
     },
 });

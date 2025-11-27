@@ -1,9 +1,11 @@
+// controllers/UsuarioController.js
 import { Usuario } from '../models/usuario';
 import DatabaseService from '../database/DatabaseService';
 
 export class UsuarioController {
+
     constructor() {
-        // Arreglo para almacenar los callbacks de los componentes suscritos
+        // Arreglo para almacenar callbacks de los componentes suscritos
         this.listeners = [];
     }
 
@@ -11,80 +13,130 @@ export class UsuarioController {
      * Inicializa la base de datos (llamado una vez al inicio)
      */
     async initialize() {
-        await DatabaseService.initialize();
+        try {
+            await DatabaseService.initialize();
+        } catch (error) {
+            console.error("Error al inicializar la BD:", error);
+            throw new Error("No se pudo inicializar la base de datos.");
+        }
     }
 
-    // --- Métodos de Lógica de Negocio ---
+    // --------------------------------------------------------------------
+    // MÉTODOS PRINCIPALES DE NEGOCIO (CRUD)
+    // --------------------------------------------------------------------
 
     /**
-     * Obtiene todos los usuarios desde el servicio de datos y los mapea al modelo Usuario.
-     * @returns {Promise<Usuario[]>} Lista de instancias del modelo Usuario.
+     * Obtiene todos los usuarios desde el servicio de datos.
+     * @returns {Promise<Usuario[]>}
      */
     async obtenerUsuarios() {
         try {
             const data = await DatabaseService.getAll();
-            // Mapea los resultados del servicio a instancias del modelo Usuario
             return data.map(u => new Usuario(u.id, u.nombre, u.fecha_creacion));
         } catch (error) {
-            console.error('Error al obtener usuarios:', error);
-            throw new Error('No se pudieron cargar los usuarios');
+            console.error("Error al obtener usuarios:", error);
+            throw new Error("No se pudieron cargar los usuarios");
         }
     }
 
     /**
-     * Crea un nuevo usuario: valida, inserta y notifica.
-     * @param {string} nombre - El nombre del usuario a crear.
-     * @returns {Promise<Usuario>} La instancia del modelo Usuario creado.
+     * Crea e inserta un usuario.
+     * @param {string} nombre
+     * @returns {Promise<Usuario>}
      */
     async crearUsuario(nombre) {
         try {
-            // 1. Validar datos usando el modelo
-            Usuario.validar(nombre); 
+            Usuario.validar(nombre); // Validación desde el modelo
 
-            // 2. Insertar en BD
             const nuevoUsuario = await DatabaseService.add(nombre.trim());
 
-            // 3. Notificar a la vista que hay un cambio (Patrón Observer) 
-            this.notifyListeners(); 
+            // Notificar a vistas
+            this.notifyListeners();
 
-            // 4. Retornar el usuario creado
+            // Regresar instancia del modelo
             return new Usuario(
-                nuevoUsuario.id, 
-                nuevoUsuario.nombre, 
+                nuevoUsuario.id,
+                nuevoUsuario.nombre,
                 nuevoUsuario.fecha_creacion
             );
+
         } catch (error) {
-            console.error('Error al crear usuario:', error);
+            console.error("Error al crear usuario:", error);
             throw error;
         }
     }
 
-    // --- Patrón Observer (Suscripción y Notificación) ---
+    /**
+     * Actualiza un usuario por ID
+     */
+    async actualizarUsuario(id, nuevoNombre) {
+        try {
+            Usuario.validar(nuevoNombre);
+
+            await DatabaseService.update(id, nuevoNombre.trim());
+            this.notifyListeners();
+            return true;
+
+        } catch (error) {
+            console.error("Error al actualizar usuario:", error);
+            throw new Error("No se pudo actualizar el usuario.");
+        }
+    }
 
     /**
-     * Agrega una función de callback a la lista de observadores.
-     * @param {function} callback - Función a ejecutar cuando ocurra un cambio.
+     * Elimina un usuario por ID
+     */
+    async eliminarUsuario(id) {
+        try {
+            await DatabaseService.delete(id);
+            this.notifyListeners();
+            return true;
+
+        } catch (error) {
+            console.error("Error al eliminar usuario:", error);
+            throw new Error("No se pudo eliminar el usuario.");
+        }
+    }
+
+    /**
+     * Elimina TODOS los usuarios
+     */
+    async eliminarTodos() {
+        try {
+            await DatabaseService.deleteAll();
+            this.notifyListeners();
+            return true;
+
+        } catch (error) {
+            console.error("Error al eliminar todos los usuarios:", error);
+            throw new Error("No se pudieron eliminar los usuarios.");
+        }
+    }
+
+    // --------------------------------------------------------------------
+    // PATRÓN OBSERVER
+    // --------------------------------------------------------------------
+
+    /**
+     * Suscribe un callback para notificar cambios
      */
     addListener(callback) {
         this.listeners.push(callback);
     }
 
     /**
-     * Remueve una función de callback de la lista de observadores.
-     * Esencial para prevenir memory leaks en componentes React/React Native.
-     * @param {function} callback - Función que se desea remover.
+     * Cancela la suscripción de un callback
      */
     removeListener(callback) {
-        // Filtra para remover el listener específico
-        this.listeners = this.listeners.filter(l => l !== callback);
+        this.listeners = this.listeners.filter(
+            listener => listener !== callback
+        );
     }
 
     /**
-     * Ejecuta todas las funciones de callback suscritas.
-     * Esto le dice a la(s) vista(s) que deben recargar la información.
+     * Notifica a todos los suscriptores
      */
     notifyListeners() {
-        // Ejecuta todas las funciones de los componentes suscritos
         this.listeners.forEach(callback => callback());
     }
 }
