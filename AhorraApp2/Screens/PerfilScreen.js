@@ -21,17 +21,42 @@ const AHORRA_APP_LOGO = require("../assets/ahorra_app_logo.jpg");
 export default function PerfilScreen({ navigation }) {
   const { colors, toggleTheme } = useContext(ThemeContext);
 
+  // -------------------------------
+  // ✔ Usuario con datos por defecto
+  // -------------------------------
+  const [usuario, setUsuario] = useState({
+    nombre: "Juan Pérez",
+    email: "jorge@example.com",
+    telefono: "5544332211",
+    password: "123456",
+  });
+
+  // Estados del modal (se llenan desde usuario)
   const [editarPerfil, setEditarPerfil] = useState(false);
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [password, setPassword] = useState("");
+  const [nombre, setNombre] = useState(usuario.nombre);
+  const [email, setEmail] = useState(usuario.email);
+  const [telefono, setTelefono] = useState(usuario.telefono);
+  const [password, setPassword] = useState(usuario.password);
 
   const mostrarAlerta = (titulo, mensaje) => {
     if (Platform.OS === "web") alert(`${titulo}\n\n${mensaje}`);
     else Alert.alert(titulo, mensaje);
   };
 
+  // -----------------------------------
+  // ✔ Abrir modal con datos del usuario
+  // -----------------------------------
+  const abrirEdicion = () => {
+    setNombre(usuario.nombre);
+    setEmail(usuario.email);
+    setTelefono(usuario.telefono);
+    setPassword(usuario.password);
+    setEditarPerfil(true);
+  };
+
+  // -------------------------------
+  // ✔ Guardar datos editados
+  // -------------------------------
   const guardarPerfil = () => {
     if (!nombre || !email || !telefono || !password) {
       mostrarAlerta("Error", "Todos los campos son obligatorios");
@@ -43,6 +68,9 @@ export default function PerfilScreen({ navigation }) {
       mostrarAlerta("Error", "Correo no válido");
       return;
     }
+
+    // Guardar en el usuario principal
+    setUsuario({ nombre, email, telefono, password });
 
     mostrarAlerta("Éxito", "Perfil actualizado correctamente");
     setEditarPerfil(false);
@@ -71,7 +99,9 @@ export default function PerfilScreen({ navigation }) {
           <View style={styles.iconosAccion}>
             <TouchableOpacity
               style={{ marginRight: 8 }}
-              onPress={() => mostrarAlerta("Notificaciones", "No tienes notificaciones nuevas")}
+              onPress={() =>
+                mostrarAlerta("Notificaciones", "No tienes notificaciones nuevas")
+              }
             >
               <Ionicons name="notifications-outline" size={20} color={colors.verde} />
             </TouchableOpacity>
@@ -86,17 +116,26 @@ export default function PerfilScreen({ navigation }) {
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.header}>
           <Image source={AHORRA_APP_LOGO} style={styles.logo} />
-          <Text style={[styles.userName, { color: colors.texto }]}>{nombre || "Usuario"}</Text>
-          <Text style={[styles.userEmail, { color: colors.textoSuave }]}>{email || "correo@dominio.com"}</Text>
+
+          {/* ✔ Datos del usuario mostrados en pantalla */}
+          <Text style={[styles.userName, { color: colors.texto }]}>
+            {usuario.nombre}
+          </Text>
+
+          <Text style={[styles.userEmail, { color: colors.textoSuave }]}>
+            {usuario.email}
+          </Text>
         </View>
 
         <View style={styles.options}>
           <TouchableOpacity
             style={[styles.option, { backgroundColor: colors.tarjeta }]}
-            onPress={() => setEditarPerfil(true)}
+            onPress={abrirEdicion}
           >
             <Ionicons name="person-outline" size={22} color={colors.verde} />
-            <Text style={[styles.optionText, { color: colors.texto }]}>Editar perfil</Text>
+            <Text style={[styles.optionText, { color: colors.texto }]}>
+              Editar perfil
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -104,12 +143,14 @@ export default function PerfilScreen({ navigation }) {
             onPress={cerrarSesion}
           >
             <Ionicons name="log-out-outline" size={22} color={colors.naranja} />
-            <Text style={[styles.optionText, { color: colors.texto }]}>Cerrar sesión</Text>
+            <Text style={[styles.optionText, { color: colors.texto }]}>
+              Cerrar sesión
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Modal editar perfil */}
+      {/* ---------- MODAL PARA EDITAR PERFIL ---------- */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -117,18 +158,29 @@ export default function PerfilScreen({ navigation }) {
         onRequestClose={() => setEditarPerfil(false)}
       >
         <View style={GlobalStyles.modalContenedor}>
-          <View style={[GlobalStyles.modalVista, { backgroundColor: colors.tarjeta }]}>
-            <Text style={[GlobalStyles.modalTitulo, { color: colors.texto }]}>Editar perfil</Text>
+          <View
+            style={[GlobalStyles.modalVista, { backgroundColor: colors.tarjeta }]}
+          >
+            <Text style={[GlobalStyles.modalTitulo, { color: colors.texto }]}>
+              Editar perfil
+            </Text>
 
             <TextInput
-              style={[GlobalStyles.modalInput, { backgroundColor: colors.fondo, color: colors.texto }]}
+              style={[
+                GlobalStyles.modalInput,
+                { backgroundColor: colors.fondo, color: colors.texto },
+              ]}
               placeholder="Nombre completo"
               placeholderTextColor={colors.textoSuave}
               value={nombre}
               onChangeText={setNombre}
             />
+
             <TextInput
-              style={[GlobalStyles.modalInput, { backgroundColor: colors.fondo, color: colors.texto }]}
+              style={[
+                GlobalStyles.modalInput,
+                { backgroundColor: colors.fondo, color: colors.texto },
+              ]}
               placeholder="Correo electrónico"
               placeholderTextColor={colors.textoSuave}
               value={email}
@@ -136,16 +188,24 @@ export default function PerfilScreen({ navigation }) {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+
             <TextInput
-              style={[GlobalStyles.modalInput, { backgroundColor: colors.fondo, color: colors.texto }]}
+              style={[
+                GlobalStyles.modalInput,
+                { backgroundColor: colors.fondo, color: colors.texto },
+              ]}
               placeholder="Número de teléfono"
               placeholderTextColor={colors.textoSuave}
               value={telefono}
               onChangeText={setTelefono}
               keyboardType="phone-pad"
             />
+
             <TextInput
-              style={[GlobalStyles.modalInput, { backgroundColor: colors.fondo, color: colors.texto }]}
+              style={[
+                GlobalStyles.modalInput,
+                { backgroundColor: colors.fondo, color: colors.texto },
+              ]}
               placeholder="Contraseña"
               placeholderTextColor={colors.textoSuave}
               value={password}
@@ -199,15 +259,15 @@ const styles = StyleSheet.create({
   titulo: { fontSize: 22, fontWeight: "700", textAlign: "center" },
   saldoTarjeta: {
     marginTop: 10,
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 12,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  saldo: { fontSize: 20, fontWeight: '700' },
+  saldo: { fontSize: 20, fontWeight: "700" },
   moneda: { fontSize: 14 },
-  iconosAccion: { flexDirection: 'row', alignItems: 'center' },
+  iconosAccion: { flexDirection: "row", alignItems: "center" },
 });
 
 const GlobalStyles = StyleSheet.create({
@@ -242,7 +302,13 @@ const GlobalStyles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
   },
-  botonBase: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: "center", marginHorizontal: 5 },
+  botonBase: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
   botonCancelar: { backgroundColor: "#ccc" },
   botonCancelarTexto: { color: "#000", fontWeight: "bold" },
   botonGuardar: { backgroundColor: "#469A49" },
