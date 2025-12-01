@@ -1,5 +1,4 @@
 import { Platform } from 'react-native';
-// Asegúrate de tener instalado 'expo-sqlite' (versión compatible con API asíncrona)
 import * as SQLite from 'expo-sqlite'; 
 
 class DatabaseService {
@@ -19,19 +18,22 @@ class DatabaseService {
             console.log('Usando LocalStorage (WEB)');
         } else {
             console.log('Usando SQLite (MÓVIL - API Asíncrona)');
-            // Usa openDatabaseAsync para la conexión moderna
-            this.db = await SQLite.openDatabaseAsync('miapp.db');
+            
+            // ⭐ 1. ABRIR CONEXIÓN ASÍNCRONA
+            if (!this.db) {
+                this.db = await SQLite.openDatabaseAsync('miapp.db');
+            }
 
-            // Ejecuta las creaciones de tablas con execAsync (más limpio)
+            // ⭐ 2. CREAR TABLAS CON execAsync (atomicidad garantizada por diseño)
             await this.db.execAsync(`
+                PRAGMA journal_mode = WAL;
+                
                 CREATE TABLE IF NOT EXISTS usuarios (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nombre TEXT NOT NULL,
                     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
-            `);
 
-            await this.db.execAsync(`
                 CREATE TABLE IF NOT EXISTS registros (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nombre TEXT NOT NULL,
@@ -54,6 +56,7 @@ class DatabaseService {
             const data = localStorage.getItem(this.storageKeys[tabla]);
             return data ? JSON.parse(data) : [];
         } else {
+            if (!this.db) throw new Error("Database not initialized.");
             // Usa getAllAsync para obtener todos los resultados de una SELECT
             return await this.db.getAllAsync(
                 `SELECT * FROM ${tabla} ORDER BY id DESC`
@@ -82,6 +85,7 @@ class DatabaseService {
             localStorage.setItem(this.storageKeys[tabla], JSON.stringify(lista));
             return nuevo;
         } else {
+            if (!this.db) throw new Error("Database not initialized.");
             // Lógica para Móvil (SQLite - API Asíncrona)
             const fecha = new Date().toISOString();
             let sql, params;
@@ -124,6 +128,7 @@ class DatabaseService {
             localStorage.setItem(this.storageKeys[tabla], JSON.stringify(nuevaLista));
             return true;
         } else {
+            if (!this.db) throw new Error("Database not initialized.");
             // Lógica para Móvil (SQLite - API Asíncrona)
             let sql, params;
 
@@ -157,6 +162,7 @@ class DatabaseService {
             localStorage.setItem(this.storageKeys[tabla], JSON.stringify(nuevaLista));
             return true;
         } else {
+            if (!this.db) throw new Error("Database not initialized.");
             // Lógica para Móvil (SQLite - API Asíncrona)
             // Usa runAsync para operaciones DELETE
             await this.db.runAsync(
@@ -179,6 +185,7 @@ class DatabaseService {
             localStorage.removeItem(this.storageKeys[tabla]);
             return true;
         } else {
+            if (!this.db) throw new Error("Database not initialized.");
             // Lógica para Móvil (SQLite - API Asíncrona)
             // Usa runAsync para operaciones DELETE ALL
             await this.db.runAsync(`DELETE FROM ${tabla}`);

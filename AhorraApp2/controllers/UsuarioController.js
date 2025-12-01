@@ -1,11 +1,11 @@
-// controllers/UsuarioController.js
+// controllers/UsuarioController.js (SIN CAMBIOS, YA ESTABA CORRECTO)
+
 import { Usuario } from '../models/usuario';
 import DatabaseService from '../database/DatabaseService';
 
 export class UsuarioController {
 
     constructor() {
-        // Arreglo para almacenar callbacks de los componentes suscritos
         this.listeners = [];
     }
 
@@ -14,6 +14,7 @@ export class UsuarioController {
      */
     async initialize() {
         try {
+            // CORRECTO: Solo llama y espera a la inicialización del servicio.
             await DatabaseService.initialize();
         } catch (error) {
             console.error("Error al inicializar la BD:", error);
@@ -31,7 +32,8 @@ export class UsuarioController {
      */
     async obtenerUsuarios() {
         try {
-            const data = await DatabaseService.getAll();
+            // Se asume que DatabaseService.getAll() usará 'usuarios' por defecto o debe recibir 'usuarios' como argumento
+            const data = await DatabaseService.getAll('usuarios'); 
             return data.map(u => new Usuario(u.id, u.nombre, u.fecha_creacion));
         } catch (error) {
             console.error("Error al obtener usuarios:", error);
@@ -48,12 +50,11 @@ export class UsuarioController {
         try {
             Usuario.validar(nombre); // Validación desde el modelo
 
-            const nuevoUsuario = await DatabaseService.add(nombre.trim());
+            // Se asume que DatabaseService.add() usará 'usuarios' por defecto o debe recibir 'usuarios' como argumento
+            const nuevoUsuario = await DatabaseService.add('usuarios', nombre.trim()); 
 
-            // Notificar a vistas
             this.notifyListeners();
 
-            // Regresar instancia del modelo
             return new Usuario(
                 nuevoUsuario.id,
                 nuevoUsuario.nombre,
@@ -73,7 +74,8 @@ export class UsuarioController {
         try {
             Usuario.validar(nuevoNombre);
 
-            await DatabaseService.update(id, nuevoNombre.trim());
+            // Se asume que DatabaseService.update() usará 'usuarios' por defecto o debe recibir 'usuarios' como argumento
+            await DatabaseService.update('usuarios', id, nuevoNombre.trim());
             this.notifyListeners();
             return true;
 
@@ -88,7 +90,8 @@ export class UsuarioController {
      */
     async eliminarUsuario(id) {
         try {
-            await DatabaseService.delete(id);
+            // Se asume que DatabaseService.delete() usará 'usuarios' por defecto o debe recibir 'usuarios' como argumento
+            await DatabaseService.delete('usuarios', id);
             this.notifyListeners();
             return true;
 
@@ -103,7 +106,8 @@ export class UsuarioController {
      */
     async eliminarTodos() {
         try {
-            await DatabaseService.deleteAll();
+            // Se asume que DatabaseService.deleteAll() usará 'usuarios' por defecto o debe recibir 'usuarios' como argumento
+            await DatabaseService.deleteAll('usuarios');
             this.notifyListeners();
             return true;
 

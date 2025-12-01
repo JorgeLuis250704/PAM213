@@ -1,4 +1,5 @@
-// controllers/RegistroController.js
+// controllers/RegistroController.js (CORREGIDO)
+
 import { Registro } from '../models/Registro';
 import DatabaseService from '../database/DatabaseService';
 
@@ -9,21 +10,10 @@ export class RegistroController {
 
     async initialize() {
         try {
+            // CORREGIDO: Solamente esperamos la inicialización
+            // de la base de datos, que ya incluye la creación de tablas.
             await DatabaseService.initialize();
-            // Aseguramos la tabla de registros
-            if (DatabaseService.db) {
-                DatabaseService.db.transaction(tx => {
-                    tx.executeSql(`
-                        CREATE TABLE IF NOT EXISTS registros (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            nombre TEXT NOT NULL,
-                            monto REAL DEFAULT 0,
-                            categoria TEXT DEFAULT '',
-                            fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
-                        );
-                    `);
-                });
-            }
+
         } catch (error) {
             console.error("Error al inicializar BD:", error);
             throw new Error("No se pudo inicializar la base de datos.");

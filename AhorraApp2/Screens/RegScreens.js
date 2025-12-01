@@ -18,7 +18,7 @@ export default function RegScreen() {
     const [registros, setRegistros] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMode, setModalMode] = useState('add');
-    const [editId, setEditId] = useState(null);
+       const [editId, setEditId] = useState(null);
     const [nombre, setNombre] = useState('');
     const [monto, setMonto] = useState('');
     const [categoria, setCategoria] = useState('');
@@ -36,11 +36,13 @@ export default function RegScreen() {
     useEffect(() => {
         const observer = () => cargarRegistros();
         registroController.addListener(observer);
+
         const init = async () => {
             await registroController.initialize();
             cargarRegistros();
         };
         init();
+
         return () => registroController.removeListener(observer);
     }, [cargarRegistros]);
 
@@ -67,19 +69,23 @@ export default function RegScreen() {
             Alert.alert('Error', 'Completa todos los campos.');
             return;
         }
+
         setGuardando(true);
+
         try {
             if (modalMode === 'add') {
                 await registroController.crearRegistro(nombre, Number(monto), categoria);
             } else {
                 await registroController.actualizarRegistro(editId, nombre, Number(monto), categoria);
             }
+
             setModalVisible(false);
             setNombre('');
             setMonto('');
             setCategoria('');
             setEditId(null);
             setModalMode('add');
+
         } catch (error) {
             Alert.alert('Error', error.message);
         } finally {
@@ -90,19 +96,28 @@ export default function RegScreen() {
     const eliminarRegistro = (id) => {
         Alert.alert('Confirmar', '¿Eliminar este registro?', [
             { text: 'Cancelar', style: 'cancel' },
-            { text: 'Eliminar', style: 'destructive', onPress: () => registroController.eliminarRegistro(id) }
+            {
+                text: 'Eliminar',
+                style: 'destructive',
+                onPress: () => registroController.eliminarRegistro(id)
+            }
         ]);
     };
 
     return (
         <View style={[styles.container, { backgroundColor: colors.fondo }]}>
+
             <StatusBar barStyle={colors.statusBar} backgroundColor={colors.verde} />
 
-            {/* ---------- BARRA VERDE SUPERIOR CON TARJETA ---------- */}
-            <View style={[styles.header, { backgroundColor: colors.verde }]}>
-                <Text style={[styles.titulo, { color: colors.tarjeta }]}>Registros</Text>
+            {/* ---------- ENCABEZADO COMO EN PrincipalScreen ---------- */}
+            <View style={[styles.encabezado, { backgroundColor: colors.verde }]}>
+
+                <Text style={[styles.titulo, { color: colors.tarjeta }]}>
+                    Registros
+                </Text>
 
                 <View style={[styles.saldoTarjeta, { backgroundColor: colors.tarjeta }]}>
+
                     <TouchableOpacity>
                         <Text style={{ fontSize: 24, color: colors.naranja }}>🏦</Text>
                     </TouchableOpacity>
@@ -124,9 +139,11 @@ export default function RegScreen() {
                             <Ionicons name="settings-outline" size={20} color={colors.naranja} />
                         </TouchableOpacity>
                     </View>
+
                 </View>
             </View>
 
+            {/* -------- LISTA -------- */}
             <ScrollView contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 100 }}>
                 {registros.length === 0 && (
                     <View style={styles.emptyContainer}>
@@ -137,7 +154,13 @@ export default function RegScreen() {
                 )}
 
                 {registros.map((item, index) => (
-                    <View key={item.id} style={[styles.userItem, { borderLeftColor: colors.verde, backgroundColor: colors.tarjeta }]}>
+                    <View
+                        key={item.id}
+                        style={[
+                            styles.userItem,
+                            { borderLeftColor: colors.verde, backgroundColor: colors.tarjeta }
+                        ]}
+                    >
                         <View style={[styles.userNumber, { backgroundColor: colors.verde }]}>
                             <Text style={styles.userNumberText}>{index + 1}</Text>
                         </View>
@@ -145,7 +168,7 @@ export default function RegScreen() {
                         <View style={styles.userInfo}>
                             <Text style={[styles.userName, { color: colors.texto }]}>{item.nombre}</Text>
                             <Text style={[styles.userId, { color: colors.naranja }]}>{item.categoria}</Text>
-                            <Text style={[styles.userDate, { color: colors.texto }]}>{`$${item.monto}`}</Text>
+                            <Text style={[styles.userDate, { color: colors.texto }]}>${item.monto}</Text>
                             <Text style={[styles.userDate, { color: colors.textoSuave }]}>
                                 Creado: {new Date(item.fechaCreacion).toLocaleDateString()}
                             </Text>
@@ -156,26 +179,29 @@ export default function RegScreen() {
                                 style={[styles.actionButton, { backgroundColor: colors.naranja }]}
                                 onPress={() => abrirEditar(item)}
                             >
-                                <FontAwesome5 name="edit" size={16} color="#fff" style={{ marginRight: 5 }} />
-                                <Text style={[styles.actionButtonText, { color: '#fff' }]}>Editar</Text>
+                                <FontAwesome5 name="edit" size={16} color="#fff" />
+                                <Text style={styles.actionButtonText}>Editar</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={[styles.actionButton, { backgroundColor: colors.rojo || '#FF3B30' }]}
                                 onPress={() => eliminarRegistro(item.id)}
                             >
-                                <FontAwesome5 name="trash" size={16} color="#fff" style={{ marginRight: 5 }} />
-                                <Text style={[styles.actionButtonText, { color: '#fff' }]}>Borrar</Text>
+                                <FontAwesome5 name="trash" size={16} color="#fff" />
+                                <Text style={styles.actionButtonText}>Borrar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 ))}
+
             </ScrollView>
 
-            <TouchableOpacity style={styles.addButton} onPress={abrirAgregar}>
+            {/* ---------- BOTÓN AGREGAR ---------- */}
+            <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.verde }]} onPress={abrirAgregar}>
                 <FontAwesome5 name="plus" size={28} color="#fff" />
             </TouchableOpacity>
 
+            {/* ---------- MODAL ---------- */}
             <Modal
                 visible={modalVisible}
                 animationType="slide"
@@ -183,8 +209,10 @@ export default function RegScreen() {
                 onRequestClose={() => !guardando && setModalVisible(false)}
             >
                 <KeyboardAvoidingView style={styles.modalWrapper} behavior="padding">
+
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={[styles.modalContent, { backgroundColor: colors.tarjeta }]}>
+
                             <Text style={[styles.modalTitle, { color: colors.texto }]}>
                                 {modalMode === 'add' ? 'Agregar registro' : 'Editar registro'}
                             </Text>
@@ -212,7 +240,10 @@ export default function RegScreen() {
                                         key={cat}
                                         style={[
                                             styles.optionButton,
-                                            categoria === cat && { backgroundColor: colors.verde, borderColor: colors.verde }
+                                            categoria === cat && {
+                                                backgroundColor: colors.verde,
+                                                borderColor: colors.verde
+                                            }
                                         ]}
                                         onPress={() => setCategoria(cat)}
                                     >
@@ -238,38 +269,123 @@ export default function RegScreen() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.button, guardando && styles.buttonDisabled, { flex: 1 }]}
+                                    style={[
+                                        styles.button,
+                                        guardando && styles.buttonDisabled,
+                                        { flex: 1 }
+                                    ]}
                                     onPress={guardarRegistro}
                                     disabled={guardando}
                                 >
-                                    <Text style={styles.buttonText}>{guardando ? 'Guardando...' : 'Guardar'}</Text>
+                                    <Text style={styles.buttonText}>
+                                        {guardando ? 'Guardando...' : 'Guardar'}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
+
                         </View>
                     </TouchableWithoutFeedback>
+
                 </KeyboardAvoidingView>
             </Modal>
 
             <BottomMenu />
+
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingTop: 50 },
-    header: { paddingVertical: 14 },
-    titulo: { fontSize: 22, fontWeight: '700', textAlign: 'center' },
+    container: { flex: 1 },
 
-    saldoTarjeta: {
-        marginTop: 10,
-        flexDirection: 'row',
-        padding: 12,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    /* -------- ENCABEZADO IGUAL QUE PrincipalScreen -------- */
+    encabezado: {
+        paddingTop: 6,
+        paddingBottom: 12,
+        paddingHorizontal: 16,
     },
-    saldo: { fontSize: 20, fontWeight: '700' },
-    moneda: { fontSize: 14 },
+    titulo: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 8,
+    },
+    saldoTarjeta: {
+        borderRadius: 16,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    saldo: { fontSize: 26, fontWeight: '800' },
+    moneda: { fontSize: 12 },
+    iconosAccion: { flexDirection: 'row', marginLeft: 12 },
+
+    /* -------- LISTA -------- */
+    userItem: {
+        flexDirection: 'row',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 15,
+        alignItems: 'center',
+        elevation: 3,
+        borderLeftWidth: 5,
+    },
+    userNumber: {
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    userNumberText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
+    userInfo: { flex: 1 },
+    userName: { fontSize: 18, fontWeight: '700' },
+    userId: { fontSize: 14 },
+    userDate: { fontSize: 12 },
+    actionsContainer: { flexDirection: 'row', marginLeft: 10 },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        marginRight: 8,
+    },
+    actionButtonText: { color: '#fff', marginLeft: 6, fontWeight: '600' },
+
+    emptyContainer: { alignItems: 'center', paddingVertical: 50 },
+    emptyText: { fontSize: 18 },
+
+    /* -------- AGREGAR -------- */
+    addButton: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'absolute',
+        bottom: 80,
+        right: 20,
+        elevation: 8,
+    },
+
+    /* -------- MODAL -------- */
+    modalWrapper: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    modalContent: {
+        borderRadius: 15,
+        padding: 25,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: 15,
+    },
 
     input: {
         borderWidth: 1,
@@ -280,49 +396,23 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 
-    button: { backgroundColor: '#007AFF', padding: 14, borderRadius: 10, alignItems: 'center' },
-    buttonDisabled: { backgroundColor: '#ccc' },
-    buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-
-    userItem: {
-        flexDirection: 'row',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 15,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 3,
-        borderLeftWidth: 5,
-    },
-    userNumber: { width: 45, height: 45, borderRadius: 22.5, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    userNumberText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
-    userInfo: { flex: 1 },
-    userName: { fontSize: 18, fontWeight: '600', marginBottom: 4 },
-    userId: { fontSize: 14, marginBottom: 2 },
-    userDate: { fontSize: 12 },
-    actionsContainer: { flexDirection: 'row', marginLeft: 10 },
-    actionButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, marginRight: 8 },
-    actionButtonText: { fontSize: 14, fontWeight: '600' },
-
-    emptyContainer: { alignItems: 'center', paddingVertical: 50 },
-    emptyText: { fontSize: 18, marginBottom: 8 },
-
-    addButton: {
-        backgroundColor: '#28A745', width: 70, height: 70, borderRadius: 35,
-        alignItems: 'center', justifyContent: 'center',
-        position: 'absolute', bottom: 80, right: 20, elevation: 6
-    },
-
-    modalWrapper: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'rgba(0,0,0,0.4)' },
-    modalContent: { borderRadius: 15, padding: 25 },
-    modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 15, textAlign: 'center' },
-
     optionsContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 },
-    optionButton: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, marginRight: 8, marginBottom: 8 },
+    optionButton: {
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        marginRight: 8,
+        marginBottom: 8,
+    },
     optionText: { fontSize: 14 },
 
-    iconosAccion: { flexDirection: 'row', alignItems: 'center' },
+    button: {
+        backgroundColor: '#007AFF',
+        padding: 14,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    buttonDisabled: { backgroundColor: '#ccc' },
+    buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
