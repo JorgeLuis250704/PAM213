@@ -17,6 +17,7 @@ export default function BottomMenu({ colorActivo = color.naranja }) {
 
   return (
     <View style={styles.barraInferior}>
+      
       {/* Perfil */}
       <TouchableOpacity style={styles.icono} onPress={() => navigation.navigate("Perfil")}>
         <Ionicons name="person-outline" size={26} color={colorIcono("Perfil")} />
@@ -27,7 +28,7 @@ export default function BottomMenu({ colorActivo = color.naranja }) {
         <Ionicons name="document-text-outline" size={26} color={colorIcono("Registros")} />
       </TouchableOpacity>
 
-      {/* Home (central flotante) */}
+      {/* Home */}
       <TouchableOpacity style={styles.botonCentral} onPress={() => navigation.navigate("Principal")}>
         <Ionicons name="home-outline" size={30} color="white" />
       </TouchableOpacity>
@@ -37,10 +38,26 @@ export default function BottomMenu({ colorActivo = color.naranja }) {
         <Ionicons name="stats-chart-outline" size={26} color={colorIcono("Graficas")} />
       </TouchableOpacity>
 
-      {/* Calendario */}
-      <TouchableOpacity style={styles.icono} onPress={() => navigation.navigate("Registros")}>
-        <Ionicons name="calendar-outline" size={26} color={colorIcono("Registros")} />
+      {/* Calendario → DetalleGraficas */}
+      <TouchableOpacity
+        style={styles.icono}
+        onPress={() =>
+          navigation.navigate("DetalleGraficas", {
+            ingresosMes: [
+              { mes: "Ene", monto: 0, color: "#66BB6A" },
+            ],
+            egresosMes: [
+              { mes: "Ene", monto: 0, color: "#EF5350" },
+            ],
+            ahorrosMes: [
+              { mes: "Ene", monto: 0, color: "#42A5F5" },
+            ],
+          })
+        }
+      >
+        <Ionicons name="calendar-outline" size={26} color={colorIcono("DetalleGraficas")} />
       </TouchableOpacity>
+
     </View>
   );
 }
