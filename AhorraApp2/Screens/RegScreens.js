@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Modal,
-    Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, StatusBar
+    Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, StatusBar, Platform
 } from 'react-native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import BottomMenu from './BottomMenu';
@@ -11,6 +11,15 @@ import { ThemeContext } from './ThemeContext';
 
 const registroController = new RegistroController();
 const categoriasOpciones = ['Alimentos', 'Transporte', 'Renta', 'Entretenimiento', 'Otros'];
+
+// Función auxiliar para alertas compatibles con web y móvil
+const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+        window.alert(`${title}\n\n${message}`);
+    } else {
+        Alert.alert(title, message);
+    }
+};
 
 export default function RegScreen() {
     const { colors, toggleTheme } = useContext(ThemeContext);
@@ -34,7 +43,7 @@ export default function RegScreen() {
             const lista = await registroController.obtenerRegistros();
             setRegistros(lista);
         } catch {
-            Alert.alert("Error", "No se pudieron cargar los registros.");
+            showAlert("Error", "No se pudieron cargar los registros.");
         }
     }, []);
 
@@ -73,7 +82,7 @@ export default function RegScreen() {
 
     const guardarRegistro = async () => {
         if (!nombre.trim() || !monto.trim() || !categoria.trim()) {
-            Alert.alert('Error', 'Completa todos los campos.');
+            showAlert('Error', 'Completa todos los campos.');
             return;
         }
 
@@ -95,21 +104,29 @@ export default function RegScreen() {
             setModalMode('add');
 
         } catch (error) {
-            Alert.alert('Error', error.message);
+            showAlert('Error', error.message);
         } finally {
             setGuardando(false);
         }
     };
 
     const eliminarRegistro = (id) => {
-        Alert.alert('Confirmar', '¿Eliminar este registro?', [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-                text: 'Eliminar',
-                style: 'destructive',
-                onPress: () => registroController.eliminarRegistro(id)
+        if (Platform.OS === 'web') {
+            // Para web, usar window.confirm
+            if (window.confirm('¿Estás seguro de que deseas eliminar este registro?')) {
+                registroController.eliminarRegistro(id);
             }
-        ]);
+        } else {
+            // Para móvil, usar Alert.alert
+            Alert.alert('Confirmar', '¿Eliminar este registro?', [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: () => registroController.eliminarRegistro(id)
+                }
+            ]);
+        }
     };
 
     return (
