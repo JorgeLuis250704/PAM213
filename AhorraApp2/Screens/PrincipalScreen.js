@@ -4,6 +4,7 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import BottomMenu from "./BottomMenu";
 import { ThemeContext } from "./ThemeContext";
+import HeaderVerde from "./HeaderVerde";
 
 export default function PrincipalScreen() {
   const navigation = useNavigation();
@@ -24,40 +25,11 @@ export default function PrincipalScreen() {
     <View style={[estilos.pantalla, { backgroundColor: colors.fondo }]}>
 
       {/* ---------------- ENCABEZADO ---------------- */}
-      <View style={[estilos.encabezado, { backgroundColor: colors.verde }]}>
-        <Text style={[estilos.titulo, { color: colors.tarjeta }]}>Bienvenido</Text>
-
-        <View style={[estilos.saldoTarjeta, { backgroundColor: colors.tarjeta }]}>
-          <TouchableOpacity onPress={() => handleNavegar("Perfil")}>
-            <Text
-              style={{
-                fontSize: 24,
-                color: route.name === "Perfil" ? colors.naranja : colors.texto,
-              }}
-            >
-              🏦
-            </Text>
-          </TouchableOpacity>
-
-          <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={[estilos.saldo, { color: colors.texto }]}>9,638.35</Text>
-            <Text style={[estilos.moneda, { color: colors.textoSuave }]}>MXN</Text>
-          </View>
-
-          <View style={estilos.iconosAccion}>
-            <TouchableOpacity
-              style={{ marginRight: 8 }}
-              onPress={() => Alert.alert("Notificaciones", "No tienes notificaciones nuevas")}
-            >
-              <Ionicons name="notifications-outline" size={20} color={colors.verde} />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={toggleTheme}>
-              <Ionicons name="settings-outline" size={20} color={colors.naranja} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      {/* ---------------- ENCABEZADO ---------------- */}
+      <HeaderVerde
+        titulo="Bienvenido"
+        onBankIconPress={() => handleNavegar("Perfil")}
+      />
 
       {/* ---------------- CUERPO ---------------- */}
       <View style={estilos.cuerpo}>

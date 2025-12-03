@@ -15,6 +15,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import BottomMenu from "./BottomMenu";
 import { ThemeContext } from "./ThemeContext";
 import DatabaseService from "../database/DatabaseService";
+import HeaderVerde from "./HeaderVerde";
 
 export default function GraficasScreen() {
   const { colors, toggleTheme } = useContext(ThemeContext);
@@ -138,34 +139,7 @@ export default function GraficasScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.fondo }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.verde} />
 
-      <View style={[styles.encabezado, { backgroundColor: colors.verde }]}>
-        <Text style={[styles.titulo, { color: colors.tarjeta }]}>Gráficas</Text>
-
-        <View style={[styles.saldoTarjeta, { backgroundColor: colors.tarjeta }]}>
-          <TouchableOpacity>
-            <Text style={{ fontSize: 24, color: colors.naranja }}>🏦</Text>
-          </TouchableOpacity>
-
-          <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={[styles.saldo, { color: colors.texto }]}>
-              {/* Calcular saldo total real */}
-              {(registros.filter(r => r.tipo === 'ingreso').reduce((acc, r) => acc + r.monto, 0) -
-                registros.filter(r => r.tipo === 'gasto').reduce((acc, r) => acc + r.monto, 0)).toFixed(2)}
-            </Text>
-            <Text style={[styles.moneda, { color: colors.textoSuave }]}>MXN</Text>
-          </View>
-
-          <View style={styles.iconosAccion}>
-            <TouchableOpacity style={{ marginRight: 8 }}>
-              <Ionicons name="notifications-outline" size={20} color={colors.verde} />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={toggleTheme}>
-              <Ionicons name="settings-outline" size={20} color={colors.naranja} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      <HeaderVerde titulo="Gráficas" />
 
       {/* --- SOLO CATEGORÍAS --- */}
       <View style={styles.tabsContainer}>

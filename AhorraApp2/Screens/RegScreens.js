@@ -8,6 +8,7 @@ import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import BottomMenu from './BottomMenu';
 import { RegistroController } from '../controllers/RegistroController';
 import { ThemeContext } from './ThemeContext';
+import HeaderVerde from './HeaderVerde';
 
 const registroController = new RegistroController();
 const categoriasOpciones = ['Alimentos', 'Transporte', 'Renta', 'Entretenimiento', 'Otros'];
@@ -134,22 +135,8 @@ export default function RegScreen() {
             <StatusBar barStyle={colors.statusBar} />
 
             {/* ENCABEZADO */}
-            <View style={[styles.encabezado, { backgroundColor: colors.verde }]}>
-                <Text style={[styles.titulo, { color: colors.tarjeta }]}>Registros</Text>
-                <View style={[styles.saldoTarjeta, { backgroundColor: colors.tarjeta }]}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={[styles.saldo, { color: colors.texto }]}>
-                            ${registros.reduce((sum, r) => sum + (r.tipo === 'ingreso' ? r.monto : -r.monto), 0).toFixed(2)}
-                        </Text>
-                        <Text style={[styles.moneda, { color: colors.textoSuave }]}>Balance Total</Text>
-                    </View>
-                    <View style={styles.iconosAccion}>
-                        <TouchableOpacity onPress={toggleTheme}>
-                            <Ionicons name="settings-outline" size={20} color={colors.naranja} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
+            {/* ENCABEZADO */}
+            <HeaderVerde titulo="Registros" />
 
             {/* LISTA DE REGISTROS */}
             <ScrollView style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
