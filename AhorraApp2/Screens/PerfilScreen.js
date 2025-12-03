@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomMenu from "./BottomMenu";
 import { ThemeContext } from "./ThemeContext";
 import DatabaseService from "../database/DatabaseService";
@@ -25,10 +26,11 @@ export default function PerfilScreen({ navigation }) {
 
   // Estados
   const [usuario, setUsuario] = useState({
-    nombre: "Juan Pérez",
-    email: "jorge@example.com",
-    telefono: "5544332211",
-    password: "123456",
+    id: null,
+    nombre: "Usuario",
+    email: "usuario@example.com",
+    telefono: "",
+    password: "",
   });
 
   const [saldoTotal, setSaldoTotal] = useState(0);
@@ -39,19 +41,59 @@ export default function PerfilScreen({ navigation }) {
 
   // Estados del modal
   const [editarPerfil, setEditarPerfil] = useState(false);
-  const [nombre, setNombre] = useState(usuario.nombre);
-  const [email, setEmail] = useState(usuario.email);
-  const [telefono, setTelefono] = useState(usuario.telefono);
-  const [password, setPassword] = useState(usuario.password);
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [password, setPassword] = useState("");
 
   const mostrarAlerta = (titulo, mensaje) => {
     if (Platform.OS === "web") alert(`${titulo}\n\n${mensaje}`);
     else Alert.alert(titulo, mensaje);
   };
 
+  // Cargar usuario actual desde AsyncStorage y BD
+  const cargarUsuario = useCallback(async () => {
+    try {
+      // Intentar obtener el email del usuario actual desde AsyncStorage
+      const currentUserEmail = await AsyncStorage.getItem('currentUserEmail');
+
+      if (currentUserEmail) {
+        // Cargar datos del usuario desde la BD
+        const usuarioDB = await DatabaseService.getUserByEmail(currentUserEmail);
+        if (usuarioDB) {
+          setUsuario({
+            id: usuarioDB.id,
+            nombre: usuarioDB.nombre,
+            email: usuarioDB.email,
+            telefono: usuarioDB.phone || "",
+            password: usuarioDB.password || "",
+          });
+        }
+      } else {
+        // Si no hay usuario en sesión, intentar cargar el último usuario registrado
+        const usuarios = await DatabaseService.getAll('usuarios');
+        if (usuarios && usuarios.length > 0) {
+          const ultimoUsuario = usuarios[0];
+          setUsuario({
+            id: ultimoUsuario.id,
+            nombre: ultimoUsuario.nombre,
+            email: ultimoUsuario.email,
+            telefono: ultimoUsuario.phone || "",
+            password: ultimoUsuario.password || "",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error al cargar usuario:", error);
+    }
+  }, []);
+
   // Cargar datos desde la base de datos
   const cargarDatos = useCallback(async () => {
     try {
+      // Primero cargar el usuario
+      await cargarUsuario();
+
       // Cargar registros
       const regs = await DatabaseService.getAll('registros');
       setRegistros(regs);
@@ -71,7 +113,7 @@ export default function PerfilScreen({ navigation }) {
     } catch (error) {
       console.error("Error al cargar datos:", error);
     }
-  }, []);
+  }, [cargarUsuario]);
 
   // Generar notificaciones basadas en presupuestos y saldo
   const generarNotificaciones = (regs, preps, saldo) => {
@@ -167,7 +209,7 @@ export default function PerfilScreen({ navigation }) {
     setEditarPerfil(true);
   };
 
-  const guardarPerfil = () => {
+  const guardarPerfil = async () => {
     if (!nombre || !email || !telefono || !password) {
       mostrarAlerta("Error", "Todos los campos son obligatorios");
       return;
@@ -179,9 +221,37 @@ export default function PerfilScreen({ navigation }) {
       return;
     }
 
-    setUsuario({ nombre, email, telefono, password });
-    mostrarAlerta("Éxito", "Perfil actualizado correctamente");
-    setEditarPerfil(false);
+    try {
+      // Actualizar en la base de datos
+      if (usuario.id) {
+        await DatabaseService.update('usuarios', usuario.id, {
+          nombre,
+          email,
+          phone: telefono,
+          password
+        });
+
+        // Actualizar AsyncStorage si cambió el email
+        if (email !== usuario.email) {
+          await AsyncStorage.setItem('currentUserEmail', email);
+        }
+      }
+
+      // Actualizar estado local
+      setUsuario({
+        ...usuario,
+        nombre,
+        email,
+        telefono,
+        password
+      });
+
+      mostrarAlerta("Éxito", "Perfil actualizado correctamente");
+      setEditarPerfil(false);
+    } catch (error) {
+      console.error("Error al guardar perfil:", error);
+      mostrarAlerta("Error", "No se pudo actualizar el perfil");
+    }
   };
 
   const cerrarSesion = () => {

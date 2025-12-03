@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DatabaseService from '../database/DatabaseService'; // 🔥 Importar nuevo servicio de BD
 
 const logoAhorra = require('../assets/ahorra_app_logo.jpg');
@@ -54,6 +55,9 @@ export default function LogInScreen({ navigation }) {
     }
 
     // 🎉 USUARIO VÁLIDO → ENTRAR
+    // Guardar email en AsyncStorage para mantener sesión
+    await AsyncStorage.setItem('currentUserEmail', mail);
+
     Alert.alert("Bienvenido", `Hola ${usuarioEncontrado.nombre}`);
     navigation.navigate("Principal");
   };
