@@ -6,11 +6,12 @@ import {
   SafeAreaView,
   TouchableOpacity,
   TextInput,
-  Button,
   Alert,
   Modal,
   Image,
 } from 'react-native';
+
+import DatabaseService from '../database/DatabaseService'; // 🔥 Importar nuevo servicio de BD
 
 const logoAhorra = require('../assets/ahorra_app_logo.jpg');
 
@@ -25,39 +26,41 @@ export default function LogInScreen({ navigation }) {
   const colorGris = '#EAEAEA';
   const colorTextoGris = '#A9A9A9';
 
-  const mostrarAlerta = () => {
+  const mostrarAlerta = async () => {
     if (mail.trim() === '' || contrasena.trim() === '') {
-      Alert.alert("Error", "Por favor, ingresa todos los campos correctamente.");
+      Alert.alert("Error", "Por favor, llena todos los campos.");
       return;
     }
 
+    // Validar formato de correo
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(mail)) {
-      Alert.alert("Error", "Por favor, ingresa un correo electrónico válido.");
+      Alert.alert("Error", "El correo ingresado no es válido.");
       return;
     }
 
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(contrasena)) {
-      Alert.alert(
-        "Error",
-        "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número."
-      );
+    // 🔥 Obtener usuario por email desde SQLite
+    const usuarioEncontrado = await DatabaseService.getUserByEmail(mail);
+
+    // Validación
+    if (!usuarioEncontrado) {
+      Alert.alert("Error", "Este correo no está registrado.");
       return;
     }
 
+    if (usuarioEncontrado.password !== contrasena) {
+      Alert.alert("Error", "La contraseña es incorrecta.");
+      return;
+    }
+
+    // 🎉 USUARIO VÁLIDO → ENTRAR
+    Alert.alert("Bienvenido", `Hola ${usuarioEncontrado.nombre}`);
     navigation.navigate("Principal");
   };
 
-  const botonCerrar = () => {
-    setModalVisible(false);
-    SetNewPassword('');
-    setCNewPassword('');
-  };
-
-  const botonGuardar = () => {
-    if (NewPassword.trim() === '' || CNewPassword.trim() === '') {
-      Alert.alert("Error", "Completa ambos campos.");
+  const handleResetPassword = async () => {
+    if (!NewPassword || !CNewPassword) {
+      Alert.alert("Error", "Por favor, llena todos los campos.");
       return;
     }
 
@@ -66,15 +69,28 @@ export default function LogInScreen({ navigation }) {
       return;
     }
 
-    Alert.alert("Éxito", "Contraseña actualizada.");
-    botonCerrar();
+    if (!mail) {
+      Alert.alert("Error", "Por favor ingresa tu correo electrónico en la pantalla principal antes de recuperar la contraseña.");
+      setModalVisible(false);
+      return;
+    }
+
+    const success = await DatabaseService.updateUserPassword(mail, NewPassword);
+
+    if (success) {
+      Alert.alert("Éxito", "Contraseña actualizada correctamente.");
+      setModalVisible(false);
+      SetNewPassword('');
+      setCNewPassword('');
+    } else {
+      Alert.alert("Error", "No se encontró un usuario con ese correo electrónico.");
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.mainContainer}>
-        
-        {/* Logo */}
+
         <Image source={logoAhorra} style={styles.logoImage} />
 
         <Text style={styles.title}>Ahorra+</Text>
@@ -88,6 +104,7 @@ export default function LogInScreen({ navigation }) {
             placeholder="Correo electrónico"
             placeholderTextColor={colorTextoGris}
             keyboardType="email-address"
+            autoCapitalize="none"
             value={mail}
             onChangeText={setMail}
           />
@@ -124,14 +141,14 @@ export default function LogInScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* MODAL RECUPERAR CONTRASEÑA */}
-      <Modal transparent={true} animationType="fade" visible={modalVisible}>
+      {/* MODAL CAMBIAR CONTRASEÑA */}
+      <Modal transparent={true} animationType="fade" visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            
+
             <Text style={styles.modalTitle}>Renovar Contraseña</Text>
             <Text style={styles.modalSubtitle}>
-              Escribe tu nueva contraseña
+              {mail ? `Para: ${mail}` : "Ingresa tu correo en la pantalla anterior"}
             </Text>
 
             <TextInput
@@ -155,14 +172,14 @@ export default function LogInScreen({ navigation }) {
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: '#6c757d' }]}
-                onPress={botonCerrar}
+                onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.modalButtonText}>Cancelar</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: colorVerde }]}
-                onPress={botonGuardar}
+                onPress={handleResetPassword}
               >
                 <Text style={styles.modalButtonText}>Guardar</Text>
               </TouchableOpacity>

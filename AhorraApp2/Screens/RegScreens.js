@@ -18,11 +18,16 @@ export default function RegScreen() {
     const [registros, setRegistros] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalMode, setModalMode] = useState('add');
-       const [editId, setEditId] = useState(null);
+    const [editId, setEditId] = useState(null);
     const [nombre, setNombre] = useState('');
     const [monto, setMonto] = useState('');
     const [categoria, setCategoria] = useState('');
+    const [tipo, setTipo] = useState('gasto'); // 'ingreso' o 'gasto'
     const [guardando, setGuardando] = useState(false);
+
+    // Filtros
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
     const cargarRegistros = useCallback(async () => {
         try {
@@ -52,6 +57,7 @@ export default function RegScreen() {
         setNombre('');
         setMonto('');
         setCategoria('');
+        setTipo('gasto');
         setModalVisible(true);
     };
 
@@ -61,6 +67,7 @@ export default function RegScreen() {
         setNombre(item.nombre);
         setMonto(String(item.monto));
         setCategoria(item.categoria);
+        setTipo(item.tipo || 'gasto');
         setModalVisible(true);
     };
 
@@ -74,15 +81,16 @@ export default function RegScreen() {
 
         try {
             if (modalMode === 'add') {
-                await registroController.crearRegistro(nombre, Number(monto), categoria);
+                await registroController.crearRegistro(nombre, Number(monto), categoria, tipo);
             } else {
-                await registroController.actualizarRegistro(editId, nombre, Number(monto), categoria);
+                await registroController.actualizarRegistro(editId, nombre, Number(monto), categoria, tipo);
             }
 
             setModalVisible(false);
             setNombre('');
             setMonto('');
             setCategoria('');
+            setTipo('gasto');
             setEditId(null);
             setModalMode('add');
 
@@ -106,116 +114,127 @@ export default function RegScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: colors.fondo }]}>
+            <StatusBar barStyle={colors.statusBar} />
 
-            <StatusBar barStyle={colors.statusBar} backgroundColor={colors.verde} />
-
-            {/* ---------- ENCABEZADO COMO EN PrincipalScreen ---------- */}
+            {/* ENCABEZADO */}
             <View style={[styles.encabezado, { backgroundColor: colors.verde }]}>
-
-                <Text style={[styles.titulo, { color: colors.tarjeta }]}>
-                    Registros
-                </Text>
-
+                <Text style={[styles.titulo, { color: colors.tarjeta }]}>Registros</Text>
                 <View style={[styles.saldoTarjeta, { backgroundColor: colors.tarjeta }]}>
-
-                    <TouchableOpacity>
-                        <Text style={{ fontSize: 24, color: colors.naranja }}>🏦</Text>
-                    </TouchableOpacity>
-
-                    <View style={{ flex: 1, marginLeft: 10 }}>
-                        <Text style={[styles.saldo, { color: colors.texto }]}>9,638.35</Text>
-                        <Text style={[styles.moneda, { color: colors.textoSuave }]}>MXN</Text>
+                    <View style={{ flex: 1 }}>
+                        <Text style={[styles.saldo, { color: colors.texto }]}>
+                            ${registros.reduce((sum, r) => sum + (r.tipo === 'ingreso' ? r.monto : -r.monto), 0).toFixed(2)}
+                        </Text>
+                        <Text style={[styles.moneda, { color: colors.textoSuave }]}>Balance Total</Text>
                     </View>
-
                     <View style={styles.iconosAccion}>
-                        <TouchableOpacity
-                            style={{ marginRight: 8 }}
-                            onPress={() => Alert.alert("Notificaciones", "No tienes notificaciones nuevas")}
-                        >
-                            <Ionicons name="notifications-outline" size={20} color={colors.verde} />
-                        </TouchableOpacity>
-
                         <TouchableOpacity onPress={toggleTheme}>
                             <Ionicons name="settings-outline" size={20} color={colors.naranja} />
                         </TouchableOpacity>
                     </View>
-
                 </View>
             </View>
 
-            {/* -------- LISTA -------- */}
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 100 }}>
-                {registros.length === 0 && (
+            {/* LISTA DE REGISTROS */}
+            <ScrollView style={{ flex: 1, paddingHorizontal: 16, paddingTop: 10 }}>
+                {registros.length === 0 ? (
                     <View style={styles.emptyContainer}>
                         <Text style={[styles.emptyText, { color: colors.textoSuave }]}>
-                            No hay registros. Agrega uno con +
+                            No hay registros aún
                         </Text>
                     </View>
+                ) : (
+                    registros.map((item, index) => (
+                        <View
+                            key={item.id}
+                            style={[
+                                styles.userItem,
+                                {
+                                    backgroundColor: colors.tarjeta,
+                                    borderLeftColor: item.tipo === 'ingreso' ? colors.verde : colors.rojo
+                                }
+                            ]}
+                        >
+                            <View style={[styles.userNumber, { backgroundColor: item.tipo === 'ingreso' ? colors.verde : colors.rojo }]}>
+                                <Text style={styles.userNumberText}>{index + 1}</Text>
+                            </View>
+                            <View style={styles.userInfo}>
+                                <Text style={[styles.userName, { color: colors.texto }]}>{item.nombre}</Text>
+                                <Text style={[styles.userId, { color: colors.textoSuave }]}>
+                                    {item.categoria} • ${item.monto.toFixed(2)}
+                                </Text>
+                                <Text style={[styles.userDate, { color: colors.textoSuave }]}>
+                                    {new Date(item.fechaCreacion).toLocaleDateString()}
+                                </Text>
+                            </View>
+                            <View style={styles.actionsContainer}>
+                                <TouchableOpacity
+                                    style={[styles.actionButton, { backgroundColor: colors.naranja }]}
+                                    onPress={() => abrirEditar(item)}
+                                >
+                                    <FontAwesome5 name="edit" size={14} color="#fff" />
+                                    <Text style={styles.actionButtonText}>Editar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.actionButton, { backgroundColor: colors.rojo }]}
+                                    onPress={() => eliminarRegistro(item.id)}
+                                >
+                                    <FontAwesome5 name="trash" size={14} color="#fff" />
+                                    <Text style={styles.actionButtonText}>Borrar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    ))
                 )}
-
-                {registros.map((item, index) => (
-                    <View
-                        key={item.id}
-                        style={[
-                            styles.userItem,
-                            { borderLeftColor: colors.verde, backgroundColor: colors.tarjeta }
-                        ]}
-                    >
-                        <View style={[styles.userNumber, { backgroundColor: colors.verde }]}>
-                            <Text style={styles.userNumberText}>{index + 1}</Text>
-                        </View>
-
-                        <View style={styles.userInfo}>
-                            <Text style={[styles.userName, { color: colors.texto }]}>{item.nombre}</Text>
-                            <Text style={[styles.userId, { color: colors.naranja }]}>{item.categoria}</Text>
-                            <Text style={[styles.userDate, { color: colors.texto }]}>${item.monto}</Text>
-                            <Text style={[styles.userDate, { color: colors.textoSuave }]}>
-                                Creado: {new Date(item.fechaCreacion).toLocaleDateString()}
-                            </Text>
-                        </View>
-
-                        <View style={styles.actionsContainer}>
-                            <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: colors.naranja }]}
-                                onPress={() => abrirEditar(item)}
-                            >
-                                <FontAwesome5 name="edit" size={16} color="#fff" />
-                                <Text style={styles.actionButtonText}>Editar</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: colors.rojo || '#FF3B30' }]}
-                                onPress={() => eliminarRegistro(item.id)}
-                            >
-                                <FontAwesome5 name="trash" size={16} color="#fff" />
-                                <Text style={styles.actionButtonText}>Borrar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                ))}
-
             </ScrollView>
 
-            {/* ---------- BOTÓN AGREGAR ---------- */}
-            <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.verde }]} onPress={abrirAgregar}>
-                <FontAwesome5 name="plus" size={28} color="#fff" />
+            {/* BOTÓN AGREGAR */}
+            <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: colors.verde }]}
+                onPress={abrirAgregar}
+            >
+                <Ionicons name="add" size={40} color="#fff" />
             </TouchableOpacity>
 
-            {/* ---------- MODAL ---------- */}
+            {/* MODAL AGREGAR/EDITAR */}
             <Modal
                 visible={modalVisible}
-                animationType="slide"
                 transparent
-                onRequestClose={() => !guardando && setModalVisible(false)}
+                animationType="fade"
+                onRequestClose={() => setModalVisible(false)}
             >
-                <KeyboardAvoidingView style={styles.modalWrapper} behavior="padding">
-
+                <KeyboardAvoidingView
+                    behavior="padding"
+                    style={styles.modalWrapper}
+                >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={[styles.modalContent, { backgroundColor: colors.tarjeta }]}>
-
                             <Text style={[styles.modalTitle, { color: colors.texto }]}>
                                 {modalMode === 'add' ? 'Agregar registro' : 'Editar registro'}
                             </Text>
+
+                            {/* TIPO SELECTOR */}
+                            <View style={{ flexDirection: 'row', marginBottom: 15 }}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.typeButton,
+                                        tipo === 'gasto' && { backgroundColor: colors.rojo || '#FF3B30' },
+                                        { borderTopLeftRadius: 8, borderBottomLeftRadius: 8 }
+                                    ]}
+                                    onPress={() => setTipo('gasto')}
+                                >
+                                    <Text style={[styles.typeText, tipo === 'gasto' && { color: '#fff' }]}>Gasto</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.typeButton,
+                                        tipo === 'ingreso' && { backgroundColor: colors.verde },
+                                        { borderTopRightRadius: 8, borderBottomRightRadius: 8 }
+                                    ]}
+                                    onPress={() => setTipo('ingreso')}
+                                >
+                                    <Text style={[styles.typeText, tipo === 'ingreso' && { color: '#fff' }]}>Ingreso</Text>
+                                </TouchableOpacity>
+                            </View>
 
                             <TextInput
                                 style={[styles.input, { backgroundColor: colors.fondo, color: colors.texto }]}
@@ -282,15 +301,12 @@ export default function RegScreen() {
                                     </Text>
                                 </TouchableOpacity>
                             </View>
-
                         </View>
                     </TouchableWithoutFeedback>
-
                 </KeyboardAvoidingView>
             </Modal>
 
             <BottomMenu />
-
         </View>
     );
 }
@@ -415,4 +431,51 @@ const styles = StyleSheet.create({
     },
     buttonDisabled: { backgroundColor: '#ccc' },
     buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+    /* -------- FILTROS -------- */
+    filterContainer: {
+        paddingHorizontal: 15,
+        marginBottom: 10,
+    },
+    monthFilter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    monthText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textTransform: 'capitalize',
+    },
+    categoryFilter: {
+        flexDirection: 'row',
+        marginBottom: 5,
+    },
+    filterChip: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        backgroundColor: '#e0e0e0',
+        marginRight: 8,
+    },
+    filterChipText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#666',
+    },
+
+    /* -------- TIPO SELECTOR -------- */
+    typeButton: {
+        flex: 1,
+        padding: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#e0e0e0',
+    },
+    typeText: {
+        fontWeight: 'bold',
+        color: '#333',
+    },
 });

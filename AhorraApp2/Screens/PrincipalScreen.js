@@ -99,16 +99,16 @@ export default function PrincipalScreen() {
               <Text style={estilos.textoOpcion}>Reportes</Text>
             </TouchableOpacity>
 
-            {/* CALENDARIO → Graficas (para no repetir Registros) */}
+            {/* PRESUPUESTOS */}
             <TouchableOpacity
               style={[
                 estilos.botonOpcion,
-                { backgroundColor: colorBotonGrid("Graficas") },
+                { backgroundColor: colorBotonGrid("Presupuestos") },
               ]}
-              onPress={() => handleNavegar("Graficas")}
+              onPress={() => handleNavegar("Presupuestos")}
             >
-              <Ionicons name="calendar-outline" size={38} color="white" />
-              <Text style={estilos.textoOpcion}>Calendario</Text>
+              <FontAwesome5 name="money-bill-wave" size={38} color="white" />
+              <Text style={estilos.textoOpcion}>Presupuestos</Text>
             </TouchableOpacity>
 
           </View>

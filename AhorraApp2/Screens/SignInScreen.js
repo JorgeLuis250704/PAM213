@@ -10,7 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import PrincipalScreen from './PrincipalScreen';
+import DatabaseService from '../database/DatabaseService'; // 🔥 Importar nuevo servicio de BD
 
 const AHORRA_APP_LOGO = require('../assets/ahorra_app_logo.jpg');
 
@@ -36,12 +36,11 @@ const CustomInput = ({
   </View>
 );
 
-export default function Tresscreen() {
+export default function SignInScreen({ navigation }) { // Recibir navigation prop
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [showPrincipal, setShowPrincipal] = useState(false);
 
   const mostrarAlerta = (titulo, mensaje) => {
     if (Platform.OS === 'web') {
@@ -56,7 +55,7 @@ export default function Tresscreen() {
     return emailRegex.test(email);
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!fullName || !email || !phone || !password) {
       mostrarAlerta('Error de registro', 'Por favor, rellena todos los campos para continuar.');
       return;
@@ -67,14 +66,32 @@ export default function Tresscreen() {
       return;
     }
 
-    mostrarAlerta('Registro exitoso', `¡Bienvenido(a) ${fullName}!`);
+    // Verificar si el usuario ya existe
+    const existingUser = await DatabaseService.getUserByEmail(email);
+    if (existingUser) {
+      mostrarAlerta('Error', 'El correo electrónico ya está registrado.');
+      return;
+    }
 
-    // 🔥 Igual que en tu segundo código
-    setShowPrincipal(true);
+    // Crear usuario a guardar
+    const newUser = {
+      nombre: fullName,
+      email,
+      phone,
+      password,
+    };
+
+    // 🔥 Guardar en SQLite / LocalStorage
+    const savedUser = await DatabaseService.add('usuarios', newUser);
+
+    if (savedUser) {
+      mostrarAlerta('Registro exitoso', `¡Bienvenido(a) ${fullName}! Ahora inicia sesión.`);
+      // Redirigir a LogIn
+      navigation.navigate("LogIn");
+    } else {
+      mostrarAlerta('Error', 'No se pudo guardar el usuario.');
+    }
   };
-
-  // 🔥 Cuando el registro se completa, mostrar PrincipalScreen
-  if (showPrincipal) return <PrincipalScreen />;
 
   return (
     <SafeAreaView style={styles.fullScreenContainer}>
@@ -120,7 +137,11 @@ export default function Tresscreen() {
           onPress={handleRegister}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonText}>Listo</Text>
+          <Text style={styles.buttonText}>Registrarse</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate("LogIn")} style={{ marginTop: 20 }}>
+          <Text style={{ color: '#007BFF' }}>¿Ya tienes cuenta? Inicia sesión</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

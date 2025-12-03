@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,53 +12,78 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import BottomMenu from "./BottomMenu";
 import { ThemeContext } from "./ThemeContext";
+import DatabaseService from "../database/DatabaseService";
 
-function generarVariaciones(datos, variacion = 0.35) {
-  return datos.map((item) => {
-    const cambio =
-      (Math.random() * item.monto * variacion) *
-      (Math.random() > 0.5 ? 1 : -1);
-    return { ...item, monto: Math.max(400, Math.round(item.monto + cambio)) };
-  });
-}
-
-export default function GraficasScreen() {
+export default function DetalleGraficasScreen() {
   const { colors, toggleTheme } = useContext(ThemeContext);
   const [vista, setVista] = useState("ahorro");
+  const [registros, setRegistros] = useState([]);
   const screenWidth = Dimensions.get("window").width;
 
   const meses = [
-    "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
 
   const coloresBarras = ["#98d4b3", "#a7d2e0", "#e0b0af"];
 
-  const ingresosMes = generarVariaciones(
-    meses.map((m, i) => ({
-      mes: m,
-      monto: 6000 + Math.floor(Math.random() * 2500),
-      color: coloresBarras[i % 3],
-    }))
+  // Cargar datos reales de la BD
+  useFocusEffect(
+    useCallback(() => {
+      const fetchRegistros = async () => {
+        const data = await DatabaseService.getAll('registros');
+        setRegistros(data);
+      };
+      fetchRegistros();
+    }, [])
   );
 
-  const egresosMes = generarVariaciones(
-    meses.map((m, i) => ({
-      mes: m,
-      monto: 2500 + Math.floor(Math.random() * 1500),
-      color: coloresBarras[i % 3],
-    }))
-  );
+  // Procesar datos para gráficas
+  const procesarDatosMensuales = () => {
+    return meses.map((mes, index) => {
+      const registrosMes = registros.filter(r => {
+        const fecha = new Date(r.fecha_creacion);
+        return fecha.getMonth() === index;
+      });
 
-  const ahorrosMes = ingresosMes.map((ing, i) => ({
-    mes: ing.mes,
-    monto: ing.monto - egresosMes[i].monto,
-    color: ing.color,
-  }));
+      const ingreso = registrosMes
+        .filter(r => r.tipo === 'ingreso')
+        .reduce((sum, r) => sum + r.monto, 0);
+
+      const egreso = registrosMes
+        .filter(r => r.tipo === 'gasto')
+        .reduce((sum, r) => sum + r.monto, 0);
+
+      const ahorro = ingreso - egreso;
+
+      return {
+        mes,
+        ingreso,
+        egreso,
+        ahorro: Math.max(0, ahorro), // Evitar barras negativas visualmente
+        color: coloresBarras[index % coloresBarras.length],
+        ingresoReal: ingreso,
+        egresoReal: egreso,
+        ahorroReal: ahorro
+      };
+    });
+  };
+
+  const datosMensuales = procesarDatosMensuales();
+
+  // Filtrar meses sin actividad para limpiar gráficas (opcional)
+  const datosVisibles = datosMensuales.filter(d => d.ingreso > 0 || d.egreso > 0);
+
+  const ingresosMes = datosVisibles.map(d => ({ mes: d.mes, monto: d.ingreso, color: d.color }));
+  const egresosMes = datosVisibles.map(d => ({ mes: d.mes, monto: d.egreso, color: d.color }));
+  const ahorrosMes = datosVisibles.map(d => ({ mes: d.mes, monto: d.ahorro, color: d.color }));
 
   const VerticalChart = ({ titulo, datos, icono }) => {
+    if (!datos || datos.length === 0) return null;
+
     const maxMonto = Math.max(...datos.map((x) => x.monto));
 
     return (
@@ -80,7 +105,7 @@ export default function GraficasScreen() {
             {datos.map((item, i) => {
               const barHeight = new Animated.Value(0);
               Animated.timing(barHeight, {
-                toValue: (item.monto / maxMonto) * 220,
+                toValue: maxMonto > 0 ? (item.monto / maxMonto) * 220 : 0,
                 duration: 900,
                 useNativeDriver: false,
               }).start();
@@ -116,7 +141,7 @@ export default function GraficasScreen() {
         <Text style={[styles.titulo, { color: colors.tarjeta }]}>Gráficas</Text>
 
         <View style={[styles.saldoTarjeta, { backgroundColor: colors.tarjeta }]}>
-          
+
           {/* Ícono banco */}
           <TouchableOpacity>
             <Text style={{ fontSize: 24, color: colors.naranja }}>🏦</Text>
@@ -124,7 +149,11 @@ export default function GraficasScreen() {
 
           {/* Cantidad */}
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={[styles.saldo, { color: colors.texto }]}>9,638.35</Text>
+            <Text style={[styles.saldo, { color: colors.texto }]}>
+              {/* Calcular saldo total real */}
+              {(registros.filter(r => r.tipo === 'ingreso').reduce((acc, r) => acc + r.monto, 0) -
+                registros.filter(r => r.tipo === 'gasto').reduce((acc, r) => acc + r.monto, 0)).toFixed(2)}
+            </Text>
             <Text style={[styles.moneda, { color: colors.textoSuave }]}>MXN</Text>
           </View>
 
@@ -171,13 +200,26 @@ export default function GraficasScreen() {
       {/* ---------- CONTENIDO ---------- */}
       <ScrollView style={{ padding: 16 }}>
         {vista === "ahorro" && (
-          <VerticalChart titulo="Ahorros por Mes" datos={ahorrosMes} icono="wallet-outline" />
+          ahorrosMes.length > 0 ? (
+            <VerticalChart titulo="Ahorros por Mes" datos={ahorrosMes} icono="wallet-outline" />
+          ) : (
+            <Text style={{ textAlign: 'center', marginTop: 20, color: colors.textoSuave }}>No hay datos suficientes para mostrar ahorros.</Text>
+          )
         )}
 
         {vista === "mes" && (
           <>
-            <VerticalChart titulo="Ingresos Mensuales" datos={ingresosMes} icono="trending-up-outline" />
-            <VerticalChart titulo="Egresos Mensuales" datos={egresosMes} icono="trending-down-outline" />
+            {ingresosMes.length > 0 ? (
+              <VerticalChart titulo="Ingresos Mensuales" datos={ingresosMes} icono="trending-up-outline" />
+            ) : (
+              <Text style={{ textAlign: 'center', marginTop: 20, color: colors.textoSuave }}>No hay ingresos registrados.</Text>
+            )}
+
+            {egresosMes.length > 0 ? (
+              <VerticalChart titulo="Egresos Mensuales" datos={egresosMes} icono="trending-down-outline" />
+            ) : (
+              <Text style={{ textAlign: 'center', marginTop: 20, color: colors.textoSuave }}>No hay egresos registrados.</Text>
+            )}
           </>
         )}
 

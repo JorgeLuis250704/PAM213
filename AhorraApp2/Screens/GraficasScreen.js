@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,61 +11,79 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import BottomMenu from "./BottomMenu";
 import { ThemeContext } from "./ThemeContext";
-
-function generarVariaciones(datos, variacion = 0.35) {
-  return datos.map((item) => {
-    const cambio =
-      (Math.random() * item.monto * variacion) *
-      (Math.random() > 0.5 ? 1 : -1);
-
-    return { ...item, monto: Math.max(400, Math.round(item.monto + cambio)) };
-  });
-}
+import DatabaseService from "../database/DatabaseService";
 
 export default function GraficasScreen() {
   const { colors, toggleTheme } = useContext(ThemeContext);
   const [vista, setVista] = useState("categoriaIngresos");
+  const [registros, setRegistros] = useState([]);
   const screenWidth = Dimensions.get("window").width;
 
   const meses = [
-    "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
 
   const coloresBarras = ["#98d4b3", "#a7d2e0", "#e0b0af"];
-  const categoriasIngresos = ["Sueldo", "Freelance", "Otros"];
-  const categoriasEgresos = ["Alimentación", "Transporte", "Entretenimiento"];
 
-  const baseIngresos = meses.map((m, i) => ({
-    categoria: categoriasIngresos[i % categoriasIngresos.length],
-    mes: m,
-    monto: 6000 + Math.floor(Math.random() * 2500),
-    color: coloresBarras[i % 3],
-  }));
+  // Cargar datos reales de la BD
+  useFocusEffect(
+    useCallback(() => {
+      const fetchRegistros = async () => {
+        const data = await DatabaseService.getAll('registros');
+        setRegistros(data);
+      };
+      fetchRegistros();
+    }, [])
+  );
 
-  const baseEgresos = meses.map((m, i) => ({
-    categoria: categoriasEgresos[i % categoriasEgresos.length],
-    mes: m,
-    monto: 2500 + Math.floor(Math.random() * 1500),
-    color: coloresBarras[i % 3],
-  }));
+  // Procesar datos para gráficas
+  const procesarDatos = (tipo) => {
+    // Filtrar por tipo (ingreso/gasto)
+    const filtrados = registros.filter(r => r.tipo === tipo);
 
-  const ingresosMes = generarVariaciones(baseIngresos);
-  const egresosMes = generarVariaciones(baseEgresos);
+    // Agrupar por categoría y mes
+    // Estructura deseada: { "Categoria": [ { mes: "Enero", monto: 100, color: ... }, ... ] }
+    const categorias = [...new Set(filtrados.map(r => r.categoria))];
 
-  const FiltrarPorCategoria = (datos, cat) =>
-    datos
-      .filter((item) => item.categoria === cat)
-      .map((item) => ({
-        categoria: item.mes,
-        monto: item.monto,
-        color: item.color,
-        mes: item.mes,
-      }));
+    return categorias.map(cat => {
+      const datosCategoria = filtrados.filter(r => r.categoria === cat);
+
+      // Mapear a meses (esto es simplificado, asume año actual o mezcla años)
+      const datosPorMes = meses.map((mes, index) => {
+        const montoMes = datosCategoria
+          .filter(r => {
+            const fecha = new Date(r.fecha_creacion);
+            return fecha.getMonth() === index;
+          })
+          .reduce((sum, r) => sum + r.monto, 0);
+
+        return {
+          mes,
+          monto: montoMes,
+          color: coloresBarras[index % coloresBarras.length]
+        };
+      });
+
+      // Filtrar meses con monto 0 para limpiar la gráfica (opcional)
+      const datosVisibles = datosPorMes.filter(d => d.monto > 0);
+
+      return {
+        categoria: cat,
+        datos: datosVisibles.length > 0 ? datosVisibles : []
+      };
+    });
+  };
+
+  const datosIngresos = procesarDatos('ingreso');
+  const datosEgresos = procesarDatos('gasto');
 
   const VerticalChart = ({ titulo, datos, icono }) => {
+    if (!datos || datos.length === 0) return null;
+
     const maxMonto = Math.max(...datos.map((x) => x.monto));
 
     return (
@@ -88,7 +106,7 @@ export default function GraficasScreen() {
               const barHeight = new Animated.Value(0);
 
               Animated.timing(barHeight, {
-                toValue: (item.monto / maxMonto) * 220,
+                toValue: maxMonto > 0 ? (item.monto / maxMonto) * 220 : 0,
                 duration: 900,
                 useNativeDriver: false,
               }).start();
@@ -129,7 +147,11 @@ export default function GraficasScreen() {
           </TouchableOpacity>
 
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={[styles.saldo, { color: colors.texto }]}>9,638.35</Text>
+            <Text style={[styles.saldo, { color: colors.texto }]}>
+              {/* Calcular saldo total real */}
+              {(registros.filter(r => r.tipo === 'ingreso').reduce((acc, r) => acc + r.monto, 0) -
+                registros.filter(r => r.tipo === 'gasto').reduce((acc, r) => acc + r.monto, 0)).toFixed(2)}
+            </Text>
             <Text style={[styles.moneda, { color: colors.textoSuave }]}>MXN</Text>
           </View>
 
@@ -169,25 +191,35 @@ export default function GraficasScreen() {
       </View>
 
       <ScrollView style={{ padding: 16 }}>
-        {vista === "categoriaIngresos" &&
-          categoriasIngresos.map((cat) => (
-            <VerticalChart
-              key={cat}
-              titulo={`Ingresos: ${cat}`}
-              datos={FiltrarPorCategoria(ingresosMes, cat)}
-              icono="arrow-up-outline"
-            />
-          ))}
+        {vista === "categoriaIngresos" && (
+          datosIngresos.length > 0 ? (
+            datosIngresos.map((item) => (
+              <VerticalChart
+                key={item.categoria}
+                titulo={`Ingresos: ${item.categoria}`}
+                datos={item.datos}
+                icono="arrow-up-outline"
+              />
+            ))
+          ) : (
+            <Text style={{ textAlign: 'center', marginTop: 20, color: colors.textoSuave }}>No hay datos de ingresos registrados.</Text>
+          )
+        )}
 
-        {vista === "categoriaEgresos" &&
-          categoriasEgresos.map((cat) => (
-            <VerticalChart
-              key={cat}
-              titulo={`Egresos: ${cat}`}
-              datos={FiltrarPorCategoria(egresosMes, cat)}
-              icono="arrow-down-outline"
-            />
-          ))}
+        {vista === "categoriaEgresos" && (
+          datosEgresos.length > 0 ? (
+            datosEgresos.map((item) => (
+              <VerticalChart
+                key={item.categoria}
+                titulo={`Egresos: ${item.categoria}`}
+                datos={item.datos}
+                icono="arrow-down-outline"
+              />
+            ))
+          ) : (
+            <Text style={{ textAlign: 'center', marginTop: 20, color: colors.textoSuave }}>No hay datos de egresos registrados.</Text>
+          )
+        )}
 
         <View style={{ height: 140 }} />
       </ScrollView>

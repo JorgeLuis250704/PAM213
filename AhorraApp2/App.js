@@ -9,6 +9,7 @@ import DetalleGraficasScreen from "./Screens/DetalleGraficasScreen";
 import LogInScreen from "./Screens/LogInScreen";
 import SignInScreen from "./Screens/SignInScreen";
 import RegistroScreen from "./Screens/RegScreens";
+import PresupuestosScreen from "./Screens/PresupuestosScreen";
 
 import Tabs from "./Navigation/Tabs";
 
@@ -27,6 +28,7 @@ export default function App() {
 
           {/* ESTA ES LA QUE FALTABA */}
           <Stack.Screen name="DetalleGraficas" component={DetalleGraficasScreen} />
+          <Stack.Screen name="Presupuestos" component={PresupuestosScreen} />
 
           <Stack.Screen name="LogIn" component={LogInScreen} />
           <Stack.Screen name="SignIn" component={SignInScreen} />

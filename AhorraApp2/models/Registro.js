@@ -7,13 +7,15 @@ export class Registro {
      * @param {number} monto
      * @param {string} categoria
      * @param {string} fechaCreacion
+     * @param {string} tipo - 'ingreso' o 'gasto'
      */
-    constructor(id, nombre, monto = 0, categoria = '', fechaCreacion) {
+    constructor(id, nombre, monto = 0, categoria = '', fechaCreacion, tipo = 'gasto') {
         this.id = id;
         this.nombre = nombre?.trim();
         this.monto = Number(monto) || 0;
         this.categoria = categoria?.trim() || '';
         this.fechaCreacion = fechaCreacion || new Date().toISOString();
+        this.tipo = tipo || 'gasto'; // 'ingreso' o 'gasto'
     }
 
     // Validaciones
@@ -39,7 +41,8 @@ export class Registro {
             nombre: this.nombre,
             monto: this.monto,
             categoria: this.categoria,
-            fechaCreacion: this.fechaCreacion
+            fechaCreacion: this.fechaCreacion,
+            tipo: this.tipo
         };
     }
 }
