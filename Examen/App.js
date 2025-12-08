@@ -1,21 +1,35 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import MenuScreen from './Screens/MenuScreen';
+import SplashScreen from './Screens/SplashScreen';
+import GalleryScreen from './Screens/GalleryScreen';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      {/*menú principal */}
-      <MenuScreen />
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  const [currentScreen, setCurrentScreen] = useState('menu');
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-});
+  useEffect(() => {
+    if (currentScreen === 'loading') {
+      const timer = setTimeout(() => {
+        setCurrentScreen('gallery');
+      }, 3000); // Wait 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [currentScreen]);
+
+  const handleStart = () => {
+    setCurrentScreen('loading');
+  };
+
+  if (currentScreen === 'menu') {
+    return <MenuScreen onStart={handleStart} />;
+  }
+
+  if (currentScreen === 'loading') {
+    return <SplashScreen />;
+  }
+
+  if (currentScreen === 'gallery') {
+    return <GalleryScreen />;
+  }
+
+  return null;
+}
