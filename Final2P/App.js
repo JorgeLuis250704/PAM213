@@ -1,20 +1,36 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import MenuScreen from './Screens/MenuScreen';
+import WeatherUPQ from './Screens/WeatherUPQ';
+import GalleryScreen from './Screens/GalleryScreen';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const [currentScreen, setCurrentScreen] = useState('menu');
+
+  useEffect(() => {
+    if (currentScreen === 'loading') {
+      const timer = setTimeout(() => {
+        setCurrentScreen('gallery');
+      }, 3000); // Wait 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [currentScreen]);
+
+  const handleStart = () => {
+    setCurrentScreen('loading');
+  };
+
+  if (currentScreen === 'menu') {
+    return <MenuScreen onStart={handleStart} />;
+  }
+
+  if (currentScreen === 'loading') {
+    return <WeatherUPQ />;
+  }
+
+  if (currentScreen === 'gallery') {
+    return <GalleryScreen />;
+  }
+
+  return null;
+}
