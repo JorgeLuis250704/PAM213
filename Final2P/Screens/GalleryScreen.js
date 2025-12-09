@@ -15,14 +15,14 @@ export default function GalleryScreen() {
     const { width } = Dimensions.get('window');
     // Ajustar el ancho de cada tarjeta para que quepan 2 con algo de margen
     // (Ancho total - márgenes) / 2
-    const cardWidth = (width - 40) / 2;
+    const cardWidth = (width - 15) / 2;
 
     // Declaración independiente de cada imagen en el estado
     const [images, setImages] = useState([
-        { id: '1', title: 'Imagen 1', source: require('../assets/ciudad1.jpg') },
-        { id: '2', title: 'Imagen 2', source: require('../assets/ciudad2.jpg') },
-        { id: '3', title: 'Imagen 3', source: require('../assets/ciudad3.jpg') },
-        { id: '4', title: 'Imagen 4', source: require('../assets/ciudad4.jpg') },
+        { id: '1', title: 'Soleado:08/12/2025 -30°', source: require('../assets/ciudad1.jpg') },
+        { id: '2', title: 'Nublado:08/12/2025 -22°', source: require('../assets/ciudad2.jpg') },
+        { id: '3', title: 'Lluvioso:08/12/2025 -15°', source: require('../assets/ciudad3.jpg') },
+        { id: '4', title: 'Tormenta:08/12/2025 -20°', source: require('../assets/ciudad4.jpg') },
     ]);
 
     const mostrarAlerta = (titulo) => {
@@ -31,7 +31,7 @@ export default function GalleryScreen() {
         } else {
             Alert.alert(
                 titulo,
-                'Esta es una descripción más detallada de la imagen seleccionada.',
+                'asd',
                 [{ text: 'Cerrar', style: 'cancel' }]
             );
         }
