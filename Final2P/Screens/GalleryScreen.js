@@ -53,6 +53,22 @@ export default function GalleryScreen() {
             </ImageBackground>
         </View>
     );
+
+    return (
+        <View style={styles.container}>
+            <FlatList
+                data={images}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                numColumns={2}
+                contentContainerStyle={styles.listContent}
+                columnWrapperStyle={styles.columnWrapper}
+                ListHeaderComponent={
+                    <Text style={styles.mainTitle}>Galería de Imágenes</Text>
+                }
+            />
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
